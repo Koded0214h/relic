@@ -1,0 +1,26 @@
+.hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5em;
+    gap: 2em;
+}
+
+.hero h1 {
+    font-size: 6rem;
+    text-transform: uppercase;
+    max-width: 60%;
+    text-align: center;
+    font-family: "Space Grotesk", sans-serif;
+}
+
+.hero .sub {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.hero .sub p {
+    text-align: center;
+}

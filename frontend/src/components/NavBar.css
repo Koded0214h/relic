@@ -1,0 +1,27 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 2em 4em;
+}
+
+.logo h1 {
+    font-weight: bolder;
+    text-transform: uppercase;
+    font-family: "Space Grotesk", sans-serif;
+}
+
+.nav-links a {
+    font-family: "Inter", sans-serif;
+    color: #888888;
+}
+
+.get-started a {
+    background-color: #FF8C00;
+    padding: .75em 1.25em;
+    color: #131313;
+    text-transform: uppercase;
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+}
