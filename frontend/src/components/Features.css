@@ -1,0 +1,30 @@
+.features {
+    border-top: 1px solid #888888;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.features-content {
+    max-width: 60%;
+    text-align: center;
+    margin-top: 2em;
+}
+
+.features .text {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.features h3 {
+    text-transform: uppercase;
+    font-family: "Space Gratesk", sans-serif;
+    font-size: 3rem;
+    color: #E5E2E1;
+}
+
+.features .text p{
+    color: #888888;
+    font-family: "Inter", sans-serif;
+}

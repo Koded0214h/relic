@@ -3,16 +3,16 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-top: 5em;
     gap: 2em;
+    max-width: 60%;
 }
 
 .hero h1 {
     font-size: 6rem;
     text-transform: uppercase;
-    max-width: 60%;
     text-align: center;
     font-family: "Space Grotesk", sans-serif;
+    color: #E5E2E1;
 }
 
 .hero .sub {
@@ -23,4 +23,31 @@
 
 .hero .sub p {
     text-align: center;
+    font-family: "Inter", sans-serif;
+    color: #E5E2E1;
+    font-size: 1.2rem;
+}
+
+.hero .sub p.light {
+    color: #888888;
+}
+
+.hero .btns {
+    display: flex;
+    gap: 1em;
+    margin-top: 1em;
+}
+
+.hero .btns a {
+    padding: 1em 2em;
+    font-family: "Inter", sans-serif;
+    border: 1px solid #888888;
+    font-weight: 700;
+}
+
+.hero .btns .have-bg {
+    background-color: #FF8C00;
+    color: #131313;
+    text-transform: uppercase;
+    border: none;
 }

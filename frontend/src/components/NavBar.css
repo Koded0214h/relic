@@ -4,6 +4,15 @@
     align-items: center;
     width: 100%;
     padding: 2em 4em;
+    border-bottom: 1px solid #888888;
+}
+
+.logo, 
+.nav-links, 
+.get-started {
+    display: flex;
+    align-items: center;
+    gap: 1em;
 }
 
 .logo h1 {

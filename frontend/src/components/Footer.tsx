@@ -1,9 +1,9 @@
-import './NavBar.css';
+import './Footer.css'
 
-function NavBar() {
+function Footer() {
 
     return (
-        <div className="navbar">
+        <footer>
             <div className="logo">
                 <h1>Relic.</h1>
             </div>
@@ -14,11 +14,9 @@ function NavBar() {
                 <li><a href="#">About</a></li>
             </ul>
 
-            <ul className='get-started'>
-                <li><a href="#">Join the waitlist</a></li>
-            </ul>
-        </div>
+            <p>Built by Koded and D'anonymousCoder. &copy; 2026</p>
+        </footer>
     )
 }
 
-export default NavBar;
+export default Footer;

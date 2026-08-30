@@ -8,7 +8,7 @@ function Hero() {
             
             <div className="sub">
                 <p>Make your photography library smaller without deleting a single photograph.</p>
-                <p>Relic finds duplicates, packs your archive more efficiently, and gives every file back exactly as it was.</p>
+                <p className='light'>Relic finds duplicates, packs your archive more efficiently, and gives every file back exactly as it was.</p>
             </div>
 
             <div className="btns">
