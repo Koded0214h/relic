@@ -1,0 +1,120 @@
+.hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2em;
+    max-width: 60%;
+}
+
+.hero h1 {
+    font-size: 6rem;
+    text-transform: uppercase;
+    text-align: center;
+    font-family: "Space Grotesk", sans-serif;
+    color: #E5E2E1;
+}
+
+.hero .sub {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.hero .sub p {
+    text-align: center;
+    font-family: "Inter", sans-serif;
+    color: #E5E2E1;
+    font-size: 1.2rem;
+}
+
+.hero .sub p.light {
+    color: #888888;
+}
+
+.hero .btns {
+    display: flex;
+    gap: 1em;
+    margin-top: 1em;
+}
+
+.hero .btns a {
+    padding: 1em 2em;
+    font-family: "Inter", sans-serif;
+    border: 1px solid #888888;
+    font-weight: 700;
+}
+
+.hero .btns .have-bg {
+    background-color: #FF8C00;
+    color: #131313;
+    text-transform: uppercase;
+    border: none;
+}
+
+
+@media (max-width: 1150px) {
+    .hero {
+        max-width: 70%;
+    }
+}
+
+@media (max-width: 900px) {
+    .hero {
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 800px) {
+    .hero {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 700px) {
+    .hero  h1 {
+        font-size: 4.5rem;
+    }
+}
+
+@media (max-width: 550px) {
+    .hero  h1 {
+        font-size: 3.5rem;
+    }
+
+    .hero .btns a {
+        font-size: .75rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .hero  h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero .sub p {
+        font-size: 14px;
+    }
+
+    .hero .btns a {
+        font-size: .65rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .hero {
+        gap: 1em;
+    }
+    
+    .hero  h1 {
+        font-size: 2rem;
+    }
+
+    .hero .sub p {
+        font-size: 12px;
+    }
+
+    .hero .btns a {
+        font-size: .5rem;
+    }
+}
