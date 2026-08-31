@@ -12,3 +12,11 @@ footer p {
     text-transform: uppercase;
     font-family: "Inter", sans-serif;
 }
+
+
+
+@media (max-width: 500px) {
+    footer p {
+        font-size: 14px;
+    }
+}

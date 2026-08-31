@@ -21,6 +21,14 @@
     font-family: "Space Grotesk", sans-serif;
 }
 
+.nav-right {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3em;
+    min-width: 60%;
+}
+
 .nav-links a {
     font-family: "Inter", sans-serif;
     color: #888888;
@@ -33,4 +41,62 @@
     text-transform: uppercase;
     font-family: "Inter", sans-serif;
     font-weight: 700;
+}
+
+button {
+    background: transparent;
+    border: none;
+}
+
+.hamburger-menu .menu {
+    background: transparent;
+    border: none;
+    color: #FF8C00;
+    display: none;
+}
+
+
+@media (max-width: 700px) {
+    .navbar {
+        position: relative;
+    }
+
+    .hamburger-menu .menu {
+        display: block;
+    }
+
+    .navbar .nav-right {
+        flex-direction: column;
+        position: absolute;
+        width: 100%;
+        display: none;
+        top: 110px;
+        left: 0;
+        background-color: #131313;
+        border: 1px solid #888888;
+        height: 35vh;
+        padding: 5em 0;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 5em;
+    }
+
+    .navbar .nav-right .nav-links,
+    .navbar .nav-right .get-started {
+        flex-direction: column;
+    }
+
+    .navbar .nav-right.show {
+        display: flex;
+    }
+
+    .nav-right a {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .navbar {
+        padding: 2em 1em;
+    }
 }

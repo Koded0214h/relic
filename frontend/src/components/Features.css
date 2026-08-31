@@ -8,7 +8,7 @@
 .features-content {
     max-width: 60%;
     text-align: center;
-    margin-top: 2em;
+    margin-top: 3em;
 }
 
 .features .text {
@@ -27,4 +27,45 @@
 .features .text p{
     color: #888888;
     font-family: "Inter", sans-serif;
+}
+
+
+@media (max-width: 1150px) {
+    .features-content {
+        max-width: 70%;
+    }
+}
+
+@media (max-width: 900px) {
+    .features-content {
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 800px) {
+    .features-content {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 700px) {
+    .features h3 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 550px) {
+    .features h3 {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 340px) {
+    .features h3 {
+        font-size: 1rem;
+    }
+
+    .features .text p {
+        font-size: 12px;
+    }
 }
