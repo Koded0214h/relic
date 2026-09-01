@@ -74,7 +74,7 @@ button {
         left: 0;
         background-color: #131313;
         border: 1px solid #888888;
-        height: 35vh;
+        height: 50vh;
         padding: 5em 0;
         align-items: center;
         justify-content: flex-start;
@@ -92,6 +92,16 @@ button {
 
     .nav-right a {
         font-size: 2rem;
+    }
+
+    .get-started a {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .navbar .nav-right  {
+        gap: 3em;
     }
 }
 
