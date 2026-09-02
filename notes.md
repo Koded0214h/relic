@@ -119,7 +119,7 @@ Commit: f139b14
 
 ## Content-addressed object store (this session)
 
-Commit: _pending — not committed yet; fill in hash after `git commit`_
+Commit: d9c87dc
 
 ### Summary of changes
 
@@ -146,3 +146,43 @@ Commit: _pending — not committed yet; fill in hash after `git commit`_
 - `store.go` mkdir error string has a typo: `"stor: mkdir: %w"` (missing "e").
 - Concurrent `Put`s are safe (unique temp names + rename), no mutex needed.
 - `go build`, `go vet`, and `go test ./... -race` all pass; store tests green.
+
+---
+
+## Archive job runner (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+- **`backend/internal/job/job.go`** (new) — `job` package: runs real archive
+  jobs, tying together `codec`, `store`, and `pkg/types`.
+  - `Job` — id/state/done/total/error, JSON-tagged, with its own `sync.Mutex`
+    and a `snapshot()` that returns a lock-free copy for readers.
+  - `State` string enum: `running` / `done` / `error`.
+  - `Runner` — holds a `*store.Store`, a `codec.Registry`, and a
+    mutex-guarded `map[string]*Job`. `NewRunner(s, r)` constructs it.
+  - `Start(jobID, paths, onResult)` — registers a `Job`, kicks off `run` in a
+    goroutine, returns the `*Job` immediately.
+  - `run` — archives each path in turn; on error sets `StateError` + message
+    and stops; otherwise increments `Done`, calls `onResult`, and sleeps 5ms so
+    SSE pollers can observe intermediate progress. Sets `StateDone` at the end.
+  - `archiveOne(path)` — opens the file, stats it, reads a 64 KB head for
+    sniffing, seeks back, builds a `types.File`, runs `registry.EncodeVerified`
+    into an OS temp file, then seeks and streams that into `store.Put`. Returns
+    a `Result{Path, Hash, Size, StoredSize, Recipe}`.
+  - `ext(path)` — local basename-aware extension helper.
+- **`backend/internal/job/job_test.go`** (new) — `TestArchiveJobEndToEnd`:
+  real `store` + generic-only `codec` registry, archives a sample file, polls
+  `Runner.Get` until `done`, asserts one `Result` and that the object landed in
+  the store. Logs original→stored sizes and codec name.
+
+### Notes / observations
+
+- `archiveOne` fills the head buffer with a single `f.Read` (may short-read);
+  `io.ReadFull`/`ReadAtLeast` would be stricter, but it's only a sniff buffer.
+- `ext()` duplicates `path/filepath.Ext` — could use the stdlib one.
+- Job progress reads/writes are properly guarded by `Job.mu`; the test's
+  `results` slice is written only from the single runner goroutine and read
+  after a `snapshot()` lock, so `-race` stays clean.
+- `go build`, `go vet`, and `go test ./... -race` all pass; job test green.
