@@ -84,7 +84,7 @@ Fallback codec of last resort:
 
 ## Backend HTTP API layer (this session)
 
-Commit: _pending — not committed yet; fill in hash after `git commit`_
+Commit: f139b14
 
 ### Summary of changes
 
