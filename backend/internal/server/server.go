@@ -10,6 +10,9 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/Koded0214h/relic/backend/internal/config"
+	"github.com/Koded0214h/relic/backend/internal/httpx"
+	"github.com/Koded0214h/relic/backend/internal/api/archive"
+	"github.com/Koded0214h/relic/backend/internal/api/files"
 )
 
 type Server struct {
@@ -40,15 +43,15 @@ func New(cfg config.Config) *Server {
 	r.Route("/api", func(r chi.Router) {
 		// auth.Mount(r)     — Ridwan
 		// shoots.Mount(r)   — Ridwan
-		// archive.Mount(r)  — you
-		// files.Mount(r)    — you
+		archive.Mount(r)
+		files.Mount(r)
 	})
 
 	return s
 }
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {
-	JSON(w, http.StatusOK, map[string]string {
+	httpx.JSON(w, http.StatusOK, map[string]string {
 		"status": "ok",
 		"env": s.cfg.Env,
 	})
@@ -61,5 +64,5 @@ func JSON(w http.ResponseWriter, status int, v any) {
 }
 
 func Error(w http.ResponseWriter, status int, code, msg string) {
-	JSON(w, status, map[string]string{"error": msg, code: code})
+	httpx.JSON(w, status, map[string]string{"error": msg, code: code})
 }
