@@ -1,76 +1,59 @@
 package archive
 
-import  (
+import (
 	"encoding/json"
 	"net/http"
-	"sync"
+	"path/filepath"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 
 	"github.com/Koded0214h/relic/backend/internal/httpx"
+	"github.com/Koded0214h/relic/backend/internal/job"
 )
 
-type jobState struct {
-	ID		string 	`json:"id"`
-	State 	string 	`json:"state"`
-	Done	int		`json:"done"`
-	Total	int		`json:"total"`
-	Error 	string	`json:"error,omitempty"`
+type Handler struct {
+	runner *job.Runner
 }
 
-var (
-	mu	sync.Mutex
-	jobs = map[string]*jobState{}
-)
-
-func Mount(r chi.Router) {
-	r.Post("/shoots/{shootID}/archive", startArchive)
-	r.Get("/jobs/{jobID}", getJob)
-	r.Get("/jobs/{jobID}/events", streamJob)
+func Mount(r chi.Router, runner *job.Runner) {
+	h := &Handler{runner: runner}
+	r.Post("/shoots/{shootID}/archive", h.startArchive)
+	r.Get("/jobs/{jobID}", h.getJob)
+	r.Get("/jobs/{jobID}/events", h.streamJob)
 }
 
-func startArchive(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) startArchive(w http.ResponseWriter, r *http.Request) {
 	shootID := chi.URLParam(r, "shootID")
-	id := "job_" + shootID
+	jobID := "job_" + shootID
 
-	mu.Lock()
-	j := &jobState{ID: id, State: "running", Done: 0, Total: 42}
-	jobs[id] = j
-	mu.Unlock()
-
-	go fakeProgress(j)
-
-	httpx.JSON(w, http.StatusAccepted, map[string]string{"job_id":id})
-}
-
-func fakeProgress(j *jobState) {
-	for j.Done < j.Total {
-		time.Sleep(150 * time.Millisecond)
-		mu.Lock()
-		j.Done++
-		if j.Done == j.Total {
-			j.State = "done"
-		}
-		mu.Unlock()
+	// TODO: once Ridwan's upload endpoint exists, look up this shoot's
+	// real uploaded file paths from the DB instead of the test corpus.
+	paths, err := testCorpusPaths()
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "corpus_error", err.Error())
+		return
 	}
+
+	h.runner.Start(jobID, paths, func(res job.Result) {
+		// TODO: once the index exists, persist res.Hash / res.Recipe
+		// keyed by file ID here. For now just visible via logs.
+	})
+
+	httpx.JSON(w, http.StatusAccepted, map[string]string{"job_id": jobID})
 }
 
-
-func getJob(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "jobID")
-	mu.Lock()
-	j, ok := jobs[id]
-	mu.Unlock()
+	j, ok := h.runner.Get(id)
 	if !ok {
 		httpx.Error(w, http.StatusNotFound, "not_found", "job not found")
 		return
 	}
-
 	httpx.JSON(w, http.StatusOK, j)
 }
 
-func streamJob(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) streamJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "jobID")
 
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -80,20 +63,20 @@ func streamJob(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		httpx.Error(w, http.StatusInternalServerError, "no_stream", "streaming unsupported")
-		return 
+		return
 	}
 
 	for {
 		select {
-		case <- r.Context().Done():
+		case <-r.Context().Done():
 			return
 		default:
 		}
-		
-		mu.Lock()
-		j, ok := jobs[id]
-		mu.Unlock()
-		if !ok { return }
+
+		j, ok := h.runner.Get(id)
+		if !ok {
+			return
+		}
 
 		b, _ := json.Marshal(j)
 		w.Write([]byte("data: "))
@@ -101,8 +84,17 @@ func streamJob(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("\n\n"))
 		flusher.Flush()
 
-		if j.State == "done" || j.State == "error" { return }
-
+		if j.State == job.StateDone || j.State == job.StateError {
+			return
+		}
 		time.Sleep(200 * time.Millisecond)
 	}
+}
+
+func testCorpusPaths() ([]string, error) {
+	matches, err := filepath.Glob("internal/testdata/*")
+	if err != nil {
+		return nil, err
+	}
+	return matches, nil
 }

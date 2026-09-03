@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,10 +10,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"github.com/Koded0214h/relic/backend/internal/config"
-	"github.com/Koded0214h/relic/backend/internal/httpx"
 	"github.com/Koded0214h/relic/backend/internal/api/archive"
 	"github.com/Koded0214h/relic/backend/internal/api/files"
+	"github.com/Koded0214h/relic/backend/internal/config"
+	"github.com/Koded0214h/relic/backend/internal/httpx"
+
+	"github.com/Koded0214h/relic/backend/internal/codec"
+	"github.com/Koded0214h/relic/backend/internal/codec/generic"
+	"github.com/Koded0214h/relic/backend/internal/job"
+	"github.com/Koded0214h/relic/backend/internal/store"
 )
 
 type Server struct {
@@ -37,13 +43,18 @@ func New(cfg config.Config) *Server {
 		MaxAge: 300,
 	}))
 
+	objStore, err := store.New(cfg.DataDir + "/objects")
+	if err != nil { log.Fatalf("store init: %v", err) }
+	registry := codec.NewRegistry(generic.New())
+	runner := job.NewRunner(objStore, registry)
+
 	s:= &Server{cfg: cfg, Router: r}
 
 	r.Get("/healthz", s.health)
 	r.Route("/api", func(r chi.Router) {
 		// auth.Mount(r)     — Ridwan
 		// shoots.Mount(r)   — Ridwan
-		archive.Mount(r)
+		archive.Mount(r, runner)
 		files.Mount(r)
 	})
 

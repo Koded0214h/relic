@@ -151,7 +151,7 @@ Commit: d9c87dc
 
 ## Archive job runner (this session)
 
-Commit: _pending — not committed yet; fill in hash after `git commit`_
+Commit: c8500e0
 
 ### Summary of changes
 
@@ -186,3 +186,60 @@ Commit: _pending — not committed yet; fill in hash after `git commit`_
   `results` slice is written only from the single runner goroutine and read
   after a `snapshot()` lock, so `-race` stays clean.
 - `go build`, `go vet`, and `go test ./... -race` all pass; job test green.
+
+---
+
+## Wire the real job runner into the archive API (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+- **`backend/internal/testdata/sample1.txt`, `sample2.txt`** (new) — stand-in
+  archive corpus until Ridwan's upload endpoint exists. Not gitignored.
+- **`backend/internal/api/archive/archive.go`** — replaced the fake in-memory
+  `jobState` map + `fakeProgress` goroutine with a real `*job.Runner`.
+  - `Handler{runner}` struct; `Mount(r, runner)` now takes the runner
+    (dependency-injected from `server.New`) instead of a package global —
+    diverges from the `Init()`/package-var sketch in the task, same effect.
+  - `startArchive` globs `internal/testdata/*` (via `testCorpusPaths()`) and
+    hands the paths to `runner.Start`; the `onResult` callback is a TODO stub
+    for index persistence once `internal/db` exists.
+  - `getJob` / `streamJob` read from `runner.Get`; SSE loop marshals the job
+    status, flushes, and `time.Sleep(200ms)` between frames until
+    `StateDone`/`StateError`.
+- **`backend/internal/job/job.go`** — split the reader-facing view out of
+  `Job`: new `Status` struct carries the JSON tags, `snapshot()` and
+  `Runner.Get` now return `Status` (no `sync.Mutex`). Fixes `go vet`
+  "copies lock value" at the two archive.go call sites; `Job` keeps the mutex
+  and drops its now-unused JSON tags.
+- **`backend/internal/server/server.go`** — `New` constructs the object store
+  (`cfg.DataDir + "/objects"`), a generic-only `codec.NewRegistry`, and a
+  `job.NewRunner`, then passes the runner to `archive.Mount`. Also fixed
+  `log.Fatal` → `log.Fatalf` (was a Printf-directive-without-format bug, also
+  flagged by vet).
+
+### Verified live
+
+`RELIC_DATA_DIR=… RELIC_PORT=8080 go run ./cmd/relic`, then:
+
+- `POST /api/shoots/abc123/archive` → `{"job_id":"job_abc123"}` (202)
+- `GET /api/jobs/job_abc123/events` → two SSE frames, `state:"running" done:2`
+  then `state:"done" done:2 total:2`
+- `find data/objects -type f` → two content-addressed blobs in the
+  `ab/cd/<hash>` sharded layout.
+
+Full path is live: HTTP → job runner → codec verify → content-addressed store,
+streamed back over SSE in the shape Ridwan is coding against.
+
+### Still open
+
+- No index yet — nothing records which hash/recipe belongs to which file, so
+  `restore` has nothing to look up. That's `internal/db`, shared with Ridwan
+  (`users`/`shoots` tables). Needs a migration-split sync with him before
+  building `objects`/`recipes`.
+- `archiveOne` short-read on the 64 KB head buffer (pre-existing).
+- `ext()` still duplicates `path/filepath.Ext` (pre-existing).
+- `server.go` still carries dead `JSON`/`Error` copies with the `code: code`
+  map-key bug (pre-existing; `httpx` is the real one).
+- `go build`, `go vet`, `go test ./... -race` all pass.

@@ -1,0 +1,1 @@
+fixture file two, repeated content for compression testing.

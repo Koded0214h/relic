@@ -21,22 +21,31 @@ const (
 )
 
 type Job struct {
+	ID    string
+	State State
+	Done  int
+	Total int
+	Error string
+
+	mu sync.Mutex
+}
+
+// Status is the lock-free, JSON-serializable view of a Job handed to readers.
+type Status struct {
 	ID    string `json:"id"`
 	State State  `json:"state"`
 	Done  int    `json:"done"`
 	Total int    `json:"total"`
 	Error string `json:"error,omitempty"`
-
-	mu sync.Mutex
 }
 
-func (j *Job) snapshot() Job {
+func (j *Job) snapshot() Status {
 	j.mu.Lock()
 	defer j.mu.Unlock()
-	return Job{
-		ID: j.ID,
+	return Status{
+		ID:    j.ID,
 		State: j.State,
-		Done: j.Done,
+		Done:  j.Done,
 		Total: j.Total,
 		Error: j.Error,
 	}
@@ -73,12 +82,12 @@ func (rn *Runner) Start(jobID string, paths []string, onResult func(Result)) *Jo
 	return j
 }
 
-func (rn *Runner) Get(jobID string) (Job, bool) {
+func (rn *Runner) Get(jobID string) (Status, bool) {
 	rn.mu.Lock()
 	j, ok := rn.jobs[jobID]
 	rn.mu.Unlock()
 	if !ok {
-		return Job{}, false
+		return Status{}, false
 	}
 	return j.snapshot(), true
 }
