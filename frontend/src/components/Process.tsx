@@ -1,5 +1,37 @@
 import './Process.css'
 
+type Features = {
+    id: number,
+    image: string,
+    headtext: string,
+    bodytext: string,
+    phase: string
+}
+
+const features: Features[] = [
+    {
+        id: 1,
+        image: "../../public/file_upload.png",
+        headtext: "Ingest",
+        bodytext: "Securely transfer raw assets into the staging area. The system immediately calculates cryptographic hashes to establish provenance before any processing begins.",
+        phase: "Intake"
+    },
+    {
+        id: 2,
+        image: "../../public/analyze.png",
+        headtext: "Analyze & Dedup",
+        bodytext: "Deep inspection of metadata and pixel data to identify exact and perceptual duplicates. Redundant data is purged, preserving only the highest fidelity original.",
+        phase: "Processing"
+    },
+    {
+        id: 3,
+        image: "../../public/storage.png",
+        headtext: "Verify & Preserve",
+        bodytext: "Final assets are encoded, compressed, and committed to the long-term store. Continuous integrity checks ensure no bit rot over the decades.",
+        phase: "Storage"
+    }
+]
+
 function Process() {
 
     return (
@@ -12,25 +44,26 @@ function Process() {
             </div>
 
             <div className="cards">
-                <div className="card">
-                    <div className="top">
-                        <h1>01</h1>
-                        <img src="" alt="" />
-                    </div>
+                {features.map((feature) => {
+                    return <div key={feature.id} className="card">
+                                <div className="top">
+                                    <h1>0{feature.id}</h1>
+                                    <img src={feature.image} alt="" />
+                                </div>
 
-                    <div className="mid">
-                            <p className="hd">Ingest</p>
+                                <div className="mid">
+                                        <p className="hd">{feature.headtext}</p>
 
-                            <p>
-                                Securely transfer raw assets into the staging area. The system immediately 
-                                calculates cryptographic hashes to establish provenance before any processing begins.
-                            </p>
-                    </div>
+                                        <p>
+                                            {feature.bodytext}
+                                        </p>
+                                </div>
 
-                    <div className="bottom">
-                        <p>Phase: Intake</p>
-                    </div>
-                </div>
+                                <div className="bottom">
+                                    <p>Phase: {feature.phase.toUpperCase()}</p>
+                                </div>
+                            </div>
+                })}
             </div>
         </div>
         </div>
