@@ -3,18 +3,20 @@ import './Hero.css';
 function Hero() {
 
     return (
-        <div className="hero">
-            <h1>Your Photos deserve more space</h1>
+        <div className="hero-content">
+            <div className="hero">
+            <h1>PRESERVING 2,438 GB OF MEMORIES TODAY</h1>
             
             <div className="sub">
-                <p>Make your photography library smaller without deleting a single photograph.</p>
-                <p className='light'>Relic finds duplicates, packs your archive more efficiently, and gives every file back exactly as it was.</p>
+                <p>Your library, smaller. Your originals, intact.</p>
+                <p className='light'>The archival standard for personal media. Deduplicate, compress, and organize with bit-exact restoration guarantees.</p>
             </div>
 
             <div className="btns">
-                <a href="#" className='have-bg'>Join the waitlist</a>
-                <a href="#">See how it works</a>
+                <a href="#" className='have-bg'>WATCH THE DEMO</a>
+                <a href="#">START ARCHIVING</a>
             </div>
+        </div>
         </div>
     )
 }

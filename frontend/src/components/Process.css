@@ -9,26 +9,24 @@
     max-width: 60%;
     text-align: center;
     margin-top: 3em;
-}
-
-.features .text {
     display: flex;
     flex-direction: column;
-    gap: 1em;
 }
 
-.features h3 {
-    text-transform: uppercase;
-    font-family: "Space Gratesk", sans-serif;
+.features-head h5 {
+    color: #000000;
     font-size: 3rem;
-    color: #E5E2E1;
 }
 
-.features .text p{
-    color: #888888;
-    font-family: "Inter", sans-serif;
+.features-head p {
+    color: #000000;
+    font-size: 1.5rem;
 }
 
+.features .card {
+    display: flex;
+    flex-direction: column;
+}
 
 @media (max-width: 1150px) {
     .features-content {

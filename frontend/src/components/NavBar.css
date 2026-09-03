@@ -4,7 +4,7 @@
     align-items: center;
     width: 100%;
     padding: 2em 4em;
-    border-bottom: 1px solid #888888;
+    border-bottom: 3px solid #E5E7EB;
 }
 
 .logo, 
@@ -31,16 +31,15 @@
 
 .nav-links a {
     font-family: "Inter", sans-serif;
-    color: #888888;
 }
 
 .get-started a {
-    background-color: #FF8C00;
+    background: transparent;
     padding: .75em 1.25em;
-    color: #131313;
     text-transform: uppercase;
     font-family: "Inter", sans-serif;
     font-weight: 700;
+    border: 3px solid #E5E7EB;
 }
 
 button {

@@ -1,3 +1,13 @@
+.hero-content {
+    background-image: url(../../public/screen\ 2.png);
+    background-position: center;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6em 0;
+}
+
 .hero {
     display: flex;
     flex-direction: column;
@@ -13,6 +23,7 @@
     text-align: center;
     font-family: "Space Grotesk", sans-serif;
     color: #E5E2E1;
+    text-shadow: 10px 10px #000000;
 }
 
 .hero .sub {
@@ -39,17 +50,21 @@
 }
 
 .hero .btns a {
-    padding: 1em 2em;
+    padding: 1em;
     font-family: "Inter", sans-serif;
-    border: 1px solid #888888;
+    border-bottom: 3px solid #E5E7EB;
     font-weight: 700;
+    text-shadow: 2px 2px #E5E7EB;
+    font-size: 1.5rem;
 }
 
 .hero .btns .have-bg {
-    background-color: #FF8C00;
+    padding: 1em 2em;
+    background: transparent;
     color: #131313;
     text-transform: uppercase;
     border: none;
+    border: 3px solid #E5E7EB;
 }
 
 

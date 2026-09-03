@@ -1,6 +1,6 @@
 import NavBar from "../components/NavBar";
 import Hero from "../components/Hero";
-import Features from "../components/Features";
+import Features from "../components/Process";
 import Footer from "../components/Footer";
 
 function LandingPage() {
@@ -15,7 +15,7 @@ function LandingPage() {
             <main>
                 <Features />
             </main>
-            
+
             <Footer />
         </div>
     )
