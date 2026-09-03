@@ -1,6 +1,6 @@
 import './Process.css'
 
-type Features = {
+type Processes = {
     id: number,
     image: string,
     headtext: string,
@@ -8,7 +8,7 @@ type Features = {
     phase: string
 }
 
-const features: Features[] = [
+const processes: Processes[] = [
     {
         id: 1,
         image: "../../public/file_upload.png",
@@ -35,32 +35,32 @@ const features: Features[] = [
 function Process() {
 
     return (
-        <div className="features">
-            <div className="features-content">
+        <div className="process">
+            <div className="process-content">
 
-            <div className="features-head">
+            <div className="process-head">
                 <h5>The archival process</h5>
                 <p>A methodical approach to digital preservation.</p>
             </div>
 
             <div className="cards">
-                {features.map((feature) => {
-                    return <div key={feature.id} className="card">
+                {processes.map((process) => {
+                    return <div key={process.id} className="card">
                                 <div className="top">
-                                    <h1>0{feature.id}</h1>
-                                    <img src={feature.image} alt="" />
+                                    <h1>0{process.id}</h1>
+                                    <img src={process.image} alt="" />
                                 </div>
 
                                 <div className="mid">
-                                        <p className="hd">{feature.headtext}</p>
+                                        <p className="hd">{process.headtext}</p>
 
                                         <p>
-                                            {feature.bodytext}
+                                            {process.bodytext}
                                         </p>
                                 </div>
 
                                 <div className="bottom">
-                                    <p>Phase: {feature.phase.toUpperCase()}</p>
+                                    <p>Phase: {process.phase.toUpperCase()}</p>
                                 </div>
                             </div>
                 })}

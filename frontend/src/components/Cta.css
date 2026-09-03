@@ -1,0 +1,33 @@
+.cta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5em;
+}
+
+.cta-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 2em;
+    max-width: 70%;
+}
+
+.cta-content h1 {
+    font-size: 3.5rem;
+    font-weight: 400;
+}
+
+.sub-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    align-items: center;
+}
+
+.sub-text a {
+    border: 3px solid #E5E7EB;
+    padding: 1em 2em;
+}

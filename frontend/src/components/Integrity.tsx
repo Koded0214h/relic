@@ -28,7 +28,7 @@ function Integrity() {
                 </div>
 
                 <div className="right">
-
+                    <img src="../../public/screen.png" alt="" />
                 </div>
             </div>
         </div>

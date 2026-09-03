@@ -1,0 +1,35 @@
+.integrity {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2em;
+    border-top: 3px solid #E5E7EB;
+    border-bottom: 3px solid #E5E7EB;
+    width: 100%;
+    height: 100%;
+}
+
+.integrity-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    height: 100%;
+}
+
+.integrity .left,
+.integrity .right {
+    width: 50%;
+}
+
+.integrity .left {
+    border-right: 3px solid #E5E7EB;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.integrity .right img {
+    height: 300px;
+}

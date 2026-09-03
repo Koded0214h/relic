@@ -1,0 +1,21 @@
+.features {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2em;
+    width: 100%;
+}
+
+.features-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+}
+
+.feat {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    font-weight: 400;
+}

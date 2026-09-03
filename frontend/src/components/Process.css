@@ -1,11 +1,11 @@
-.features {
+.process {
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-top: 3em;
+    margin-top: 2em;
 }
 
-.features-content {
+.process-content {
     width: 90%;
     text-align: center;
     margin-top: 5em;
@@ -13,17 +13,17 @@
     flex-direction: column;
 }
 
-.features-head h5 {
+.process-head h5 {
     color: #000000;
     font-size: 3rem;
 }
 
-.features-head p {
+.process-head p {
     color: #000000;
     font-size: 1.5rem;
 }
 
-.features .cards {
+.process .cards {
     display: flex;
     justify-content: space-between;
     width: 100%;
@@ -31,33 +31,34 @@
     margin-top: 5em;
 }
 
-.features .card {
+.process .card {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
 }
 
-.features .card .top {
+.process .card .top {
     display: flex;
     flex-direction: column;
     border-bottom: 3px solid #E5E7EB;
-    background-color: blue;
     justify-content: space-between;
     height: 200px;
+    align-items: flex-end;
+    padding-bottom: 3em;
 }
 
-.features .card .top h1 {
+.process .card .top h1 {
     font-size: 4rem;
+    width: 100%;
     text-align: left;
 }
 
-.features .card .top img {
+.process .card .top img {
     height: 40px;
-    width: 40px;
     text-align: right;
 }
 
-.features .card .mid {
+.process .card .mid {
     display: flex;
     flex-direction: column;
     gap: 2em;
@@ -65,48 +66,48 @@
     padding: 3rem 0;
 }
 
-.features .card p {
+.process .card p {
     text-align: left;
 }
 
-.features .card .mid .hd {
+.process .card .mid .hd {
     font-size: 1.35rem;
 }
 
-.features .card .mid p {
+.process .card .mid p {
     font-size: 1.25rem;
 }
 
-.features .card .bottom {
+.process .card .bottom {
     border-top: 3px solid #E5E7EB;
     padding-top: 2rem;
 }
 
-.features .card .bottom p {
+.process .card .bottom p {
     font-size: 1.75rem;
     text-transform: uppercase;
 }
 
 @media (max-width: 1150px) {
-    .features-content {
+    .process-content {
         max-width: 70%;
     }
 }
 
 @media (max-width: 900px) {
-    .features-content {
+    .process-content {
         max-width: 80%;
     }
 }
 
 @media (max-width: 800px) {
-    .features-content {
+    .process-content {
         max-width: 90%;
     }
 }
 
 @media (max-width: 700px) {
-    .features h3 {
+    .process h3 {
         font-size: 2rem;
     }
 }
@@ -118,11 +119,11 @@
 }
 
 @media (max-width: 340px) {
-    .features h3 {
+    .process h3 {
         font-size: 1rem;
     }
 
-    .features .text p {
+    .process .text p {
         font-size: 12px;
     }
 }
