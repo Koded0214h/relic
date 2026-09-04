@@ -243,3 +243,62 @@ streamed back over SSE in the shape Ridwan is coding against.
 - `server.go` still carries dead `JSON`/`Error` copies with the `code: code`
   map-key bug (pre-existing; `httpx` is the real one).
 - `go build`, `go vet`, `go test ./... -race` all pass.
+
+---
+
+## JPEG codec (jpg-jxl) + registry wiring (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+- **`backend/internal/codec/jpg/jpg.go`** (new, was pre-existing untracked) —
+  `jpg` codec (`Name = "jpg-jxl"`), a lossless JPEG↔JXL transcoder that shells
+  out to `cjxl` / `djxl`.
+  - `New()` runs `exec.LookPath` for both binaries once; if either is missing,
+    `available` is false and `CanHandle` always returns false, so JPEGs fall
+    through to `generic` with no special-casing.
+  - `CanHandle` — requires `available`, a `.jpg`/`.jpeg` ext, and an
+    `FF D8` magic-byte prefix before it will shell out.
+  - `Encode` — temp-file in, `cjxl … --lossless_jpeg=1` → `.jxl`, stream to
+    `dst`, `Recipe{Codec:"jpg-jxl", Version:1}`.
+  - `Decode` — temp-file in, `djxl` → `.jpg`, stream to `dst`.
+  - Fixed two bugs in the pre-existing file: import path was
+    `github.com/Koded0214/…` (missing `h`), and the encode command used the
+    bare `-j` flag which no longer parses in libjxl 0.11.x — silently failed
+    the round-trip so every JPEG fell back to `generic`. Now
+    `--lossless_jpeg=1`, which `djxl` reconstructs byte-for-byte.
+- **`backend/internal/codec/jpg/jpg_test.go`** (new) — `TestJPEGRoundTripAndRatio`
+  reads `internal/testdata/sample.jpg` (`t.Skip` if absent), runs it through
+  `EncodeVerified` + `Decode`, asserts an exact byte round-trip, and logs the
+  codec used and the compression ratio.
+- **`backend/internal/server/server.go`** — registry is now
+  `codec.NewRegistry(generic.New(), jpg.New())`. `NewRegistry(generic, codecs…)`
+  tries `codecs` in order before the generic fallback, so `jpg` gets first
+  refusal on anything it claims. (Task said "currently main.go" — the registry
+  actually moved to `server.New` last session; the stray `jpg` import added to
+  `main.go` was reverted.)
+- **`backend/internal/testdata/sample.jpg`** (new, ~44 KB) — real baseline JPEG
+  (413×531, from `~/Pictures/koded.jpeg`) for the jpg test and the `make run`
+  corpus. (An earlier 5.6 MB wallpaper `sample3.jpg` was used during bring-up,
+  then dropped in favour of this smaller fixture.)
+
+### Verified
+
+`go test ./internal/codec/jpg/... -v`:
+
+```
+codec used: jpg-jxl | 44658 -> 36905 bytes (82.6%)
+--- PASS: TestJPEGRoundTripAndRatio
+```
+
+`jpg-jxl` (not `generic` → no fallback), 17.4% saving, byte-exact round-trip.
+Also confirmed end to end through the archive API during bring-up: a JPEG in
+the corpus stores as its `.jxl` transcode and restores identically, `.txt`
+files still go through generic zstd.
+
+### Still open
+
+- Same as previous section: no index (`internal/db`) yet — needs the
+  migration-split sync with Ridwan.
+- `go build`, `go vet`, `go test ./... -race` all pass.
