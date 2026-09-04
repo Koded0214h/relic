@@ -88,13 +88,25 @@
     }
 }
 
-@media (max-width: 1000) {
+@media (max-width: 1000px) {
+    .integrity .right img {
+        height: 200px;
+    }
+
     .integrity .left h4 {
-        font-size: .5rem;
-        width: 100px;
+        font-size: 1.5rem;
+        width: 300px;
     }
 
     .integrity .left h6 {
+        font-size: .8rem;
+    }
+
+    .integrity .left p {
+        font-size: .5rem;
+    }
+
+    .integrity .left ul p {
         font-size: 1rem;
     }
 }

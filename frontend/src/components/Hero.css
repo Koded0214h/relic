@@ -55,14 +55,15 @@
     font-family: "Inter", sans-serif;
     border-bottom: 3px solid #E5E7EB;
     font-weight: 700;
-    text-shadow: 2px 2px #E5E7EB;
+    color: #E5E7EB;
+    text-shadow: 2px 2px #000000;
     font-size: 1.5rem;
 }
 
 .hero .btns .have-bg {
     padding: 1em 2em;
     background: transparent;
-    color: #131313;
+    color: #E5E7EB;
     text-transform: uppercase;
     border: none;
     border: 3px solid #E5E7EB;
@@ -88,8 +89,13 @@
 }
 
 @media (max-width: 770px) {
+    .hero {
+        width: 90%;
+    }
+
     .hero  h1 {
-        font-size: 4.5rem;
+        font-size: 3.5rem;
+        text-shadow: 4px 4px #000000;
     }
 
     .hero .btns {
@@ -98,12 +104,21 @@
 
     .hero .btns a {
         text-align: center;
+        font-size: 1rem;
     }
 }
 
+
+
 @media (max-width: 550px) {
+    .hero {
+        height: 60vh;
+    }
+
     .hero  h1 {
-        font-size: 3.5rem;
+        font-size: 2rem;
+        text-shadow: 3px 3px #000000;
+        gap: 1em;
     }
 
     .hero .btns a {
@@ -112,6 +127,10 @@
 }
 
 @media (max-width: 400px) {
+    .hero {
+        height: 50vh;
+    }
+
     .hero  h1 {
         font-size: 2.5rem;
     }
@@ -131,7 +150,7 @@
     }
     
     .hero  h1 {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
 
     .hero .sub p {

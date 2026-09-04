@@ -115,6 +115,32 @@
     .process-content {
         max-width: 90%;
     }
+
+    .process h5 {
+        font-size: 2rem;
+    }
+
+    .process .process-head p {
+        font-size: .75rem;
+    }
+
+    .process .cards {
+        flex-wrap: wrap;
+        gap: 3em;
+    }
+
+    .process .card .top {
+        height: 120px;
+        padding-bottom: 1.5em;
+    }
+
+    .process .card .top h1 {
+        font-size: 2.5rem;
+    }
+
+    .process .card .top img {
+        height: 30px;
+    }
 }
 
 @media (max-width: 700px) {
@@ -130,11 +156,11 @@
 }
 
 @media (max-width: 340px) {
-    .process h3 {
-        font-size: 1rem;
+    .process h5 {
+        font-size: 1.5rem;
     }
 
-    .process .text p {
-        font-size: 12px;
+    .process .process-head p {
+        font-size: 1rem;
     }
 }

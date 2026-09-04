@@ -19,3 +19,13 @@
     gap: 1em;
     font-weight: 400;
 }
+
+
+@media (max-width: 660px) {
+    .features-content {
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 2em;
+    }
+}
