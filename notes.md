@@ -302,3 +302,68 @@ files still go through generic zstd.
 - Same as previous section: no index (`internal/db`) yet — needs the
   migration-split sync with Ridwan.
 - `go build`, `go vet`, `go test ./... -race` all pass.
+
+---
+
+## RAW codec (raw-preview) + registry wiring (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+- **`backend/internal/codec/raw/raw.go`** (new, was pre-existing untracked but
+  did NOT compile — ~8 syntax/typo errors). What it does: finds the largest
+  embedded JPEG in a camera RAW (`.cr2/.cr3/.nef/.arw/.dng/.raf/.orf/.rw2`),
+  transcodes just that preview with the `jpg` codec, and leaves the
+  surrounding RAW bytes untouched. `Decode` splices the reconstructed preview
+  back in → bit-exact round-trip. `Recipe.Params["preview_codec"]` records the
+  inner codec; `Recipe.Blob` holds `"before, preview, after"` byte lengths.
+  - Fixed to compile: `stringa`→`strings`; unexported `canHandle`→`CanHandle`
+    (interface wasn't satisfied); missing struct-literal commas in
+    `previewFile`; `type.Recipe`→`types.Recipe`; `var previewbytes.Buffer`→
+    `var preview bytes.Buffer`; `fmt.Sprintf`→`fmt.Sscanf` in `decodeOffsets`
+    (and it had `_, err =` off a single-return call); label-with-no-statement
+    from the `goto`.
+  - **Real logic bug fixed:** `largestJPEG` stopped at the first `FFD9`. Every
+    real RAW nests a thumbnail JPEG inside the preview's EXIF, so the first
+    `FFD9` is the *thumbnail's* — the old scan extracted a broken
+    header+thumbnail fragment, `cjxl` choked on it, and the registry silently
+    fell back to `generic` for basically all real RAWs. Rewrote the scan to
+    track SOI/EOI nesting depth (also drops the `goto`, per the note in the
+    handoff). Documented the remaining assumption (a stray `FFD8/FFD9` in a
+    maker-note/ICC blob could still skew it — fine for a preview heuristic).
+  - Dropped the redundant `func min` (builtin since Go 1.21; go.mod is 1.26);
+    `encodeOffsets` now uses `fmt.Appendf`.
+- **`backend/internal/codec/raw/raw_test.go`** (new) —
+  `TestRAWPreviewRoundTrip` is the handoff's test: reads
+  `internal/testdata/sample.arw` and `t.Skip`s if absent (no real camera RAW
+  checked in). `TestRAWSyntheticRoundTrip` (added) fabricates a RAW-shaped
+  container — opaque header + the real `sample.jpg` (which itself carries an
+  EXIF thumbnail, so it exercises the nesting fix) + trailer, ext `.dng` —
+  and asserts an exact round-trip through the registry with
+  `rec.Codec == "raw-preview"` (only enforced when `cjxl` is on PATH).
+- **`backend/internal/server/server.go`** — registry is now
+  `codec.NewRegistry(generic.New(), jpg.New(), raw.New())`.
+
+### Verified
+
+`go test ./internal/codec/raw/... -v`:
+
+```
+--- SKIP: TestRAWPreviewRoundTrip (no sample RAW in testdata)
+    codec: raw-preview | 46458 -> 38705 bytes (83.3%)
+--- PASS: TestRAWSyntheticRoundTrip
+```
+
+Synthetic RAW: `raw-preview` engaged (not the generic fallback), byte-exact
+round-trip, ~17% saved (all from the embedded-preview transcode). Full
+`go test ./... -race` green.
+
+### Still open
+
+- **Not yet tested against a real camera RAW.** Drop a `.arw`/`.cr2`/`.nef`
+  into `internal/testdata/sample.arw` (adjust the name in the test) and rerun
+  to confirm `largestJPEG` picks the right preview on real-world marker soup.
+- Offset encoding in `Blob` is crude comma-separated text — replace with a
+  compact binary form before shipping (flagged in the handoff, left as-is).
+- Same index (`internal/db`) gap as the previous sections.

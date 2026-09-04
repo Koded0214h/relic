@@ -18,6 +18,7 @@ import (
 	"github.com/Koded0214h/relic/backend/internal/codec"
 	"github.com/Koded0214h/relic/backend/internal/codec/generic"
 	"github.com/Koded0214h/relic/backend/internal/codec/jpg"
+	"github.com/Koded0214h/relic/backend/internal/codec/raw"
 	"github.com/Koded0214h/relic/backend/internal/job"
 	"github.com/Koded0214h/relic/backend/internal/store"
 )
@@ -47,8 +48,9 @@ func New(cfg config.Config) *Server {
 	objStore, err := store.New(cfg.DataDir + "/objects")
 	if err != nil { log.Fatalf("store init: %v", err) }
 	// Order matters: specific codecs are tried before the generic fallback.
-	// jpg.New() self-disables (CanHandle → false) if cjxl/djxl aren't on PATH.
-	registry := codec.NewRegistry(generic.New(), jpg.New())
+	// jpg/raw self-disable (or error out to the fallback) if cjxl/djxl
+	// aren't on PATH.
+	registry := codec.NewRegistry(generic.New(), jpg.New(), raw.New())
 	runner := job.NewRunner(objStore, registry)
 
 	s:= &Server{cfg: cfg, Router: r}
