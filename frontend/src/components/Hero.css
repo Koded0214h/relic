@@ -71,7 +71,7 @@
 
 @media (max-width: 1150px) {
     .hero {
-        max-width: 70%;
+        max-width: 80%;
     }
 }
 
@@ -87,9 +87,17 @@
     }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 770px) {
     .hero  h1 {
         font-size: 4.5rem;
+    }
+
+    .hero .btns {
+        flex-direction: column;
+    }
+
+    .hero .btns a {
+        text-align: center;
     }
 }
 

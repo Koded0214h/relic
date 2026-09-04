@@ -40,6 +40,13 @@ footer .left {
 
 
 
+@media (max-width: 1150px) {
+    .footer-content {
+        width: 90%;
+    }
+}
+
+
 @media (max-width: 500px) {
     footer p {
         font-size: 14px;

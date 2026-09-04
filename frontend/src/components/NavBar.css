@@ -50,12 +50,12 @@ button {
 .hamburger-menu .menu {
     background: transparent;
     border: none;
-    color: #FF8C00;
+    color: #000000;
     display: none;
 }
 
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
     .navbar {
         position: relative;
     }
@@ -73,7 +73,7 @@ button {
         left: 0;
         background-color: #131313;
         border: 1px solid #888888;
-        height: 50vh;
+        height: 40vh;
         padding: 5em 0;
         align-items: center;
         justify-content: flex-start;
@@ -91,10 +91,12 @@ button {
 
     .nav-right a {
         font-size: 2rem;
+        color: #E7E5EB;
     }
 
     .get-started a {
         font-size: 1rem;
+        color: #E5E7EB;
     }
 }
 

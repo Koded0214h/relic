@@ -21,9 +21,9 @@ function Integrity() {
                     </p>
 
                     <ul>
-                        <li>SHA-256 Hashing on ingest</li>
-                        <li>Non-destructive Compression</li>
-                        <li>Periodic integrity Scrubbing</li>
+                        <li><img src="../../public/check_round.png" alt="" /><p>SHA-256 Hashing on ingest</p></li>
+                        <li><img src="../../public/check_round.png" alt="" /><p>Non-destructive Compression</p></li>
+                        <li><img src="../../public/check_round.png" alt="" /><p>Periodic integrity Scrubbing</p></li>
                     </ul>
                 </div>
 

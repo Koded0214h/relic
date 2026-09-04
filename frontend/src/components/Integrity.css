@@ -2,7 +2,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 2em;
+    margin-top: 5em;
     border-top: 3px solid #E5E7EB;
     border-bottom: 3px solid #E5E7EB;
     width: 100%;
@@ -24,12 +24,77 @@
 
 .integrity .left {
     border-right: 3px solid #E5E7EB;
-    height: 500px;
+    height: 600px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    gap: 2em;
+}
+
+.integrity .left h4 {
+    font-size: 3rem;
+    font-weight: 400;
+    border-bottom: 3px solid #E5E7EB;
+    padding-bottom: .75em;
+    width: 500px;
+}
+
+.integrity .left h6 {
+    font-size: 1.5rem;
+    font-weight: 400;
+}
+
+.integrity .left p {
+    font-size: 1rem;
+}
+
+.integrity .left ul {
+    border-top: 3px solid #E5E7EB;
+    padding-top: 2em;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.integrity .left ul li {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+}
+
+.integrity .left ul p {
+    font-size: 1rem;
 }
 
 .integrity .right img {
     height: 300px;
+}
+
+
+
+@media (max-width: 1150px) {
+    .integrity .right img {
+        height: 250px;
+    }
+
+    .integrity .left h4 {
+        font-size: 2.5rem;
+        width: 400px;
+    }
+
+    .integrity .left p {
+        font-size: .75rem;
+        padding-right: 2em;
+    }
+}
+
+@media (max-width: 1000) {
+    .integrity .left h4 {
+        font-size: .5rem;
+        width: 100px;
+    }
+
+    .integrity .left h6 {
+        font-size: 1rem;
+    }
 }

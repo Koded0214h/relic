@@ -2,13 +2,14 @@
     display: flex;
     justify-content: center;
     width: 100%;
-    margin-top: 2em;
+    margin-top: 3em;
+    border-top: 3px solid #E5E7EB;
+    padding-top: 3em;
 }
 
 .process-content {
     width: 90%;
     text-align: center;
-    margin-top: 5em;
     display: flex;
     flex-direction: column;
 }
@@ -90,7 +91,17 @@
 
 @media (max-width: 1150px) {
     .process-content {
-        max-width: 70%;
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 1030px) {
+    .process .card .mid p {
+        font-size: 1rem;
+    }
+
+    .process .card .bottom p {
+        font-size: 1.25rem;
     }
 }
 
