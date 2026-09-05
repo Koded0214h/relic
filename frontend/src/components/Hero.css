@@ -1,10 +1,21 @@
+.hero-content {
+    background-image: url(../../public/screen\ 2.png);
+    background-position: center;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6em 0;
+}
+
 .hero {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 2em;
-    max-width: 60%;
+    width: 80%;
+    height: 70vh;
 }
 
 .hero h1 {
@@ -13,6 +24,7 @@
     text-align: center;
     font-family: "Space Grotesk", sans-serif;
     color: #E5E2E1;
+    text-shadow: 10px 10px #000000;
 }
 
 .hero .sub {
@@ -39,23 +51,28 @@
 }
 
 .hero .btns a {
-    padding: 1em 2em;
+    padding: 1em;
     font-family: "Inter", sans-serif;
-    border: 1px solid #888888;
+    border-bottom: 3px solid #E5E7EB;
     font-weight: 700;
+    color: #E5E7EB;
+    text-shadow: 2px 2px #000000;
+    font-size: 1.5rem;
 }
 
 .hero .btns .have-bg {
-    background-color: #FF8C00;
-    color: #131313;
+    padding: 1em 2em;
+    background: transparent;
+    color: #E5E7EB;
     text-transform: uppercase;
     border: none;
+    border: 3px solid #E5E7EB;
 }
 
 
 @media (max-width: 1150px) {
     .hero {
-        max-width: 70%;
+        max-width: 80%;
     }
 }
 
@@ -71,15 +88,37 @@
     }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 770px) {
+    .hero {
+        width: 90%;
+    }
+
     .hero  h1 {
-        font-size: 4.5rem;
+        font-size: 3.5rem;
+        text-shadow: 4px 4px #000000;
+    }
+
+    .hero .btns {
+        flex-direction: column;
+    }
+
+    .hero .btns a {
+        text-align: center;
+        font-size: 1rem;
     }
 }
 
+
+
 @media (max-width: 550px) {
+    .hero {
+        height: 60vh;
+    }
+
     .hero  h1 {
-        font-size: 3.5rem;
+        font-size: 2rem;
+        text-shadow: 3px 3px #000000;
+        gap: 1em;
     }
 
     .hero .btns a {
@@ -88,6 +127,10 @@
 }
 
 @media (max-width: 400px) {
+    .hero {
+        height: 50vh;
+    }
+
     .hero  h1 {
         font-size: 2.5rem;
     }
@@ -107,7 +150,7 @@
     }
     
     .hero  h1 {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
 
     .hero .sub p {

@@ -1,12 +1,13 @@
 .landing-page {
-    background-color: #131313;
+    background-color: #F0F0F0;
     min-height: 100vh;
-    color: #E5E2E1;
+    color: #000000;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5em;
     width: 100%;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
 }
 
 .landing-page header,
@@ -14,6 +15,5 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3em;
     width: 100%;
 }
