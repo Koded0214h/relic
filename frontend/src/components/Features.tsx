@@ -9,17 +9,17 @@ type Features = {
 const features: Features[] = [
     {
         id: 1,
-        img: "../../public/code.png",
+        img: "/code.png",
         text: "100% Open Source"
     },
     {
         id: 2,
-        img: "../../public/self_hosted.png",
+        img: "/self_hosted.png",
         text: "Self-Hosted"
     },
     {
         id: 3,
-        img: "../../public/bit.png",
+        img: "/bit.png",
         text: "Bit-exact restoration"
     }
 ]
