@@ -21,14 +21,14 @@ function Integrity() {
                     </p>
 
                     <ul>
-                        <li><img src="../../public/check_round.png" alt="" /><p>SHA-256 Hashing on ingest</p></li>
-                        <li><img src="../../public/check_round.png" alt="" /><p>Non-destructive Compression</p></li>
-                        <li><img src="../../public/check_round.png" alt="" /><p>Periodic integrity Scrubbing</p></li>
+                        <li><img src="/check_round.png" alt="" /><p>SHA-256 Hashing on ingest</p></li>
+                        <li><img src="/check_round.png" alt="" /><p>Non-destructive Compression</p></li>
+                        <li><img src="/check_round.png" alt="" /><p>Periodic integrity Scrubbing</p></li>
                     </ul>
                 </div>
 
                 <div className="right">
-                    <img src="../../public/screen.png" alt="" />
+                    <img src="/screen.png" alt="" />
                 </div>
             </div>
         </div>

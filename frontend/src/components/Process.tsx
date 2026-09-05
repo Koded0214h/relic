@@ -11,21 +11,21 @@ type Processes = {
 const processes: Processes[] = [
     {
         id: 1,
-        image: "../../public/file_upload.png",
+        image: "/file_upload.png",
         headtext: "Ingest",
         bodytext: "Securely transfer raw assets into the staging area. The system immediately calculates cryptographic hashes to establish provenance before any processing begins.",
         phase: "Intake"
     },
     {
         id: 2,
-        image: "../../public/analyze.png",
+        image: "/analyze.png",
         headtext: "Analyze & Dedup",
         bodytext: "Deep inspection of metadata and pixel data to identify exact and perceptual duplicates. Redundant data is purged, preserving only the highest fidelity original.",
         phase: "Processing"
     },
     {
         id: 3,
-        image: "../../public/storage.png",
+        image: "/storage.png",
         headtext: "Verify & Preserve",
         bodytext: "Final assets are encoded, compressed, and committed to the long-term store. Continuous integrity checks ensure no bit rot over the decades.",
         phase: "Storage"
