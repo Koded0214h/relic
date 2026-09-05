@@ -46,9 +46,42 @@ footer .left {
     }
 }
 
+@media (max-width: 1000px) {
+    footer p,
+    footer a {
+        font-size: .8rem;
+    }
+}
 
-@media (max-width: 500px) {
+@media (max-width: 800px) {
+    footer p,
+    footer a {
+        font-size: .6rem;
+    }
+
+    .footer-content {
+        gap: 3em;
+    }
+}
+
+
+@media (max-width: 530px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 1.5em;
+    }
+
     footer p {
-        font-size: 14px;
+        text-align: center;
+    }
+
+    footer .left {
+        align-items: center;
+        gap: .5em;
+    }
+
+    footer ul {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 }

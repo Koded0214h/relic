@@ -73,6 +73,10 @@
 
 
 @media (max-width: 1150px) {
+    .integrity .left {
+        height: 450px;
+    }
+
     .integrity .right img {
         height: 250px;
     }
@@ -108,5 +112,119 @@
 
     .integrity .left ul p {
         font-size: 1rem;
+    }
+}
+
+@media (max-width: 800px) {
+    .integrity .left h4 {
+        width: 250px;
+    }
+
+    .integrity .left ul img {
+        height: 15px;
+    }
+
+    .integrity .left ul p {
+        font-size: .7rem;
+    }
+
+    .integrity .right img {
+        height: 170px;
+    }
+}
+
+@media (max-width: 670px) {
+    .integrity .right img {
+        height: 150px;
+    }
+
+    .integrity .left ul li {
+        gap: .5em;
+    }
+
+    .integrity .left ul img {
+        height: 10px;
+    }
+}
+
+@media (max-width: 600px) {
+    .integrity {
+        margin-top: 7em;
+        border-top: none;
+    }
+
+    .integrity-content {
+        flex-direction: column-reverse;
+    }
+
+    .integrity .left {
+        width: 90%;
+        border: none;
+        height: 500px;
+    }
+
+    .integrity .left h4 {
+        font-size: 2rem;
+        width: 300px;
+    }
+
+    .integrity .left h6 {
+        font-size: 1.5rem;
+    }
+
+    .integrity .left p {
+        font-size: .8rem;
+    }
+
+    .integrity .right {
+        width: 90%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .integrity .right img {
+        height: 200px;
+        margin-left: 2.5em;
+    }
+}
+
+
+@media (max-width: 404px) {
+    .integrity .left {
+        height: 550px;
+    }
+
+    .integrity .left h4 {
+        font-size: 1.5rem;
+        width: 250px;
+    }
+
+    .integrity .left p {
+        font-size: .7rem;
+    }
+
+    .integrity .right img {
+        height: 140px;
+    }
+}
+
+@media (max-width: 300px) {
+    .integrity .left h4 {
+        font-size: 1.1rem;
+        font-weight: 500;
+        width: 190px;
+    }
+
+    .integrity .left h6 {
+        font-size: 1.1rem;
+    }
+
+    .integrity .left p {
+        font-size: .65rem;
+    }
+
+    .integrity .right img {
+        height: 120px;
     }
 }

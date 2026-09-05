@@ -31,3 +31,48 @@
     border: 3px solid #E5E7EB;
     padding: 1em 2em;
 }
+
+
+@media (max-width: 900px) {
+    .cta-content {
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 730px) {
+    .cta-content {
+        max-width: 90%;
+    }
+
+    .cta-content h1 {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 550px) {
+    .cta-content {
+        max-width: 90%;
+    }
+
+    .cta-content h1 {
+        font-size: 2.3rem;
+    }
+
+    .cta-content p {
+        font-size: .85rem;
+    }
+
+    .cta-content a {
+        font-size: .85rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .cta-content h1 {
+        font-size: 2rem;
+    }
+
+    .cta-content p {
+        font-size: .65rem;
+    }
+}

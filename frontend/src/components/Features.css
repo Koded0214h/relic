@@ -29,3 +29,14 @@
         gap: 2em;
     }
 }
+
+@media (max-width: 300px) {
+    .feat {
+        gap: .35em;
+    }
+
+    .features h4 {
+        text-align: center;
+        font-size: 12px;
+    }
+}
