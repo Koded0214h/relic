@@ -367,3 +367,209 @@ round-trip, ~17% saved (all from the embedded-preview transcode). Full
 - Offset encoding in `Blob` is crude comma-separated text — replace with a
   compact binary form before shipping (flagged in the handoff, left as-is).
 - Same index (`internal/db`) gap as the previous sections.
+
+---
+
+## Benchmark harness (relic-bench) (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+- **`backend/cmd/relic-bench/main.go`** (new, was pre-existing untracked but
+  did NOT compile). Walks a directory (arg, default `internal/testdata`), runs
+  every file through the real `codec.NewRegistry(generic, jpg, raw)` via
+  `EncodeVerified` + `Decode`, and prints a per-file table plus per-codec and
+  total roll-ups (original → encoded, ratio, verify ✓/✗).
+  - Fixed to compile: `string.ToLower`→`strings.ToLower`; `func printaTable`
+    (never called) → `func printTable`, and its param `[]results`→`[]result`.
+  - Dropped the redundant local `func min` (builtin, go.mod is 1.26).
+  - Made the "BY CODEC" roll-up iterate in sorted codec-name order so runs are
+    comparable (map iteration was random).
+- **`backend/Makefile`** — added `bench` target (`go run ./cmd/relic-bench`)
+  and put it on `.PHONY`.
+
+### First real run
+
+`go run ./cmd/relic-bench ~/Pictures/tutoring-post` (6 files, mixed):
+
+```
+FILE                                   EXT    CODEC        ORIGINAL    ENCODED   RATIO   OK
+.DS_Store                              .ds_store generic     6.0 KiB     335 B    5.4%   ✓
+Screenshot ...10.18.51.png             .png   generic     210.1 KiB 194.8 KiB   92.7%   ✓
+Screenshot ...10.19.15.png             .png   generic    1013.5 KiB 996.0 KiB   98.3%   ✓
+Screenshot ...10.19.39.png             .png   generic       1.2 MiB   1.2 MiB   95.4%   ✓
+me.HEIC                                .heic  generic    1006.9 KiB 972.5 KiB   96.6%   ✓
+stackd1.jpg                            .jpg   jpg-jxl     188.0 KiB 121.6 KiB   64.7%   ✓
+
+BY CODEC
+  generic   5 files    3.4 MiB ->   3.3 MiB   saved  3.7%
+  jpg-jxl   1 files  188.0 KiB -> 121.6 KiB   saved 35.3%
+TOTAL: 3.6 MiB -> 3.4 MiB   saved 5.3%   FAILURES: 0
+```
+
+- **`jpg-jxl` saved 35.3%** on the one real JPEG — above the 20–25% doc target
+  (small sample; a real shoot will vary).
+- PNG / HEIC correctly route to `generic` and barely move (already compressed).
+- `.DS_Store` compresses ~95% but that's a junk file, not a signal.
+- No RAW in this folder, so `raw-preview` wasn't exercised here.
+- All 6 verified byte-exact, 0 failures.
+
+### Still open
+
+- No RAW files handy — need a folder with `.arw`/`.cr2`/`.nef` to get a
+  `raw-preview` number against the 30–50% target.
+- Table's `%-6s` EXT column is blown out by `.ds_store` (9 chars) — cosmetic.
+- Separate: `backend/internal/db/` appeared in the tree mid-session (someone
+  started the index) and imports `modernc.org/sqlite`, which isn't in
+  `go.mod` yet — so a module-wide `go build ./...` / `go vet ./...` currently
+  fails there. Not part of this change; `./cmd/relic-bench` builds fine on its
+  own.
+
+---
+
+## Wire SQLite index + download end to end (Features 1+2) (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+- **`go.mod` / `go.sum`** — `go get modernc.org/sqlite` (v1.58.0, pure-Go, no
+  cgo) + `github.com/google/uuid`; `go mod tidy` pulled the modernc build-time
+  dep tree.
+- **`backend/internal/db/db.go`** — was broken pseudocode; rewrote. `Open`
+  (`sql.Open("sqlite", path+"?_pragma=foreign_keys(1)")` + `Ping`) and
+  `Migrate` (applies every `//go:embed migrations/*.sql` file in name order;
+  all `CREATE ... IF NOT EXISTS`, safe every boot).
+- **`backend/internal/db/migrations/`** (new) — `0001_users.sql`,
+  `0002_sessions.sql`, `0003_objects.sql` (numbering settled in the handoff:
+  users/sessions are ours now too, objects is 0003 so it can't collide).
+  `0003` is the `archived_files` table: uuid `id`, `shoot_id`, `path`,
+  `original_size`, `hash` (object-store key), `stored_size`, `codec` +
+  `codec_version` + `codec_params` (JSON) + `codec_blob` (recipe.Blob).
+- **`backend/internal/db/archive.go`** — fixed `var af = ArchivedFile` →
+  `var af ArchivedFile`. `InsertArchiveFile` / `GetArchivedFile` otherwise
+  as written (JSON-marshals `Recipe.Params`, stores `Recipe.Blob` as BLOB).
+- **`backend/internal/api/archive/archive.go`** — converged the half-migrated
+  handler onto the package-var + `Init` pattern: `Init(rn *job.Runner,
+  database *sql.DB)`, `Mount(r)` (no runner arg), dropped the `Handler`
+  struct. The job's `onResult` callback now calls `db.InsertArchiveFile`, so
+  every archived file gets a row.
+- **`backend/internal/api/files/files.go`** — fixed syntax (`af. err :=` →
+  `af, err :=`; `s*store.Store` → `s *store.Store`; the broken hand-rolled
+  `filenameof` → `path.Base`). `download` looks up the row, streams the
+  object through `registry.Decode` to `w`.
+- **`backend/internal/server/server.go`** — slimmed to just routing:
+  store/codec/job/db construction moved out to `main`; `archive.Mount(r)` /
+  `files.Mount(r)`. Deleted the long-dead `server.JSON`/`server.Error` (and
+  the `code: code` map-key bug in the latter) — `httpx` is the real one.
+- **`backend/cmd/relic/main.go`** — `run()` now opens+migrates the DB, builds
+  the store / registry / runner, calls `archive.Init` and `files.Init`, then
+  `server.New(cfg)`. Also fixed the `"shtting down"` log typo.
+
+### Verified end to end
+
+`RELIC_PORT=8080 ./relic`, then:
+
+```
+POST /api/shoots/abc123/archive        -> {"job_id":"job_abc123"}, job -> done (3/3)
+
+sqlite3 data/relic.db 'select id,path,codec,original_size,stored_size from archived_files'
+  b0d81c0f-…  internal/testdata/sample.jpg   jpg-jxl  44658  36905
+  c2c83d54-…  internal/testdata/sample1.txt  generic     60     73
+  777205ff-…  internal/testdata/sample2.txt  generic     60     73
+
+curl /api/files/<sample1 id>/download -o /tmp/restored.txt
+diff /tmp/restored.txt internal/testdata/sample1.txt   -> no output  ✓
+```
+
+- `.txt` (generic) and `.jpg` (jpg-jxl) both restore **byte-identical**
+  (`diff` / `cmp` clean).
+- `Content-Disposition: attachment; filename="sample1.txt"`,
+  `Content-Length: 60`. Bad id → 404.
+- **Killed and restarted the server, re-downloaded → still byte-identical.**
+  The path→hash→recipe mapping is in SQLite, so it survives a restart. That's
+  Features 1 and 2 proven together.
+
+### Still open
+
+- **Integrity-model gap (known, deferred per handoff):** `files.download`
+  runs `registry.Decode` straight into `w`. A decode failure after the first
+  flush leaves the client a truncated body under a 200. Fix = decode into a
+  buffer, re-hash against `af.Hash`, then write `w`. Comment left in the code.
+- `internal/auth/` is in the tree (Feature 3, in progress) and does **not**
+  compile yet (`argon2.IDkey` typo, unused imports, missing return) — so
+  module-wide `go build ./...` still fails there. Everything wired this
+  session builds/vets clean on its own; `go run ./cmd/relic` is unaffected
+  (auth isn't mounted).
+- Migrations run unconditionally on boot with no schema-version tracking —
+  fine while they're all idempotent `IF NOT EXISTS`, revisit for real
+  migrations.
+
+---
+
+## Auth: signup / login / session / middleware (Feature 3) (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+Handed-off auth code was broken pseudocode across four files (plus a
+structural mistake) — rewrote to compile and pass the full loop.
+
+- **Structural fix:** `internal/auth/auth.go` was `package authapi` living in
+  the `internal/auth/` dir alongside `package auth` files (two packages, one
+  dir = won't build) and imported its own directory. Moved it to
+  **`internal/api/auth/auth.go`**, which is the path `server.go` / `main.go`
+  already import as `authapi`.
+- **`internal/api/auth/auth.go`** (`package authapi`) — HTTP layer. `Init(db,
+  secure)`; `Mount` registers `POST /auth/{signup,login,logout}` and
+  `GET /me` behind `auth.Middleware`. Fixed: `err !+ nil`, `strings.TrimSpce`,
+  `maps[string]string`, `func me(w http.http.ResponseWriter…)`, `httpx.Error(W,
+  …)`, `errr`/`err` mixups, `"/auth.logout"` route path. `signup` now checks
+  `@` in email and password ≥ 8.
+- **`internal/auth/session.go`** (`package auth`) — cookie + session store.
+  Rewrote the mangled `Middlwware` (bad func literal, `Middlwware` typo,
+  `UserIDFromSession(d, …)`); fixed `errors.new`, `time.Tiem`,
+  `r.Context.Value`. `ClearCookie` now also sets `MaxAge:-1` so browsers
+  actually drop it. 30-day TTL, `HttpOnly`, `SameSite=Lax`, `Secure` gated on
+  `!cfg.Dev()`.
+- **`internal/auth/password.go`** (`package auth`) — argon2id
+  (64 MiB / t=3 / p=4), `salt$hash` base64 format, constant-time verify. Fixed
+  the `prallelism` typo (the earlier `argon2.IDkey` is already `IDKey` here).
+- **`internal/user/user.go`** — `Create` / `Authenticate` / `Get`. Fixed
+  `WHERE emial`, `SELECT id, email DFROM users`, `ErrInavlidCredentials`, and
+  an ignored error on the existence check.
+- **`internal/db/migrations/`** — added `0003_objects.sql` (archived_files,
+  from the previous session), `0004_shoots.sql` (shoots + shoot_files, from
+  the handoff — Feature 4, tables only, no handlers yet).
+- **`cmd/relic/main.go`** — `authapi.Init(database, !cfg.Dev())`.
+- **`internal/server/server.go`** — `authapi.Mount(r)` under `/api` (this edit
+  arrived from disk; kept).
+
+### Verified end to end
+
+`RELIC_PORT=8080 ./relic`, fresh DB:
+
+| step | result |
+|---|---|
+| `POST /api/auth/signup` | `201` `{"email":"koded@relic.dev","id":"459abf43…"}`, sets `relic_session` (HttpOnly) |
+| `GET /api/me` (with cookie) | `200`, same `{id,email}` — session resolves |
+| `POST /api/auth/logout` | `204`, row deleted, cookie cleared |
+| `GET /api/me` (after) | `401` — session gone |
+| `POST /api/auth/login` (right pw) | `200` + working `/me` |
+| login wrong pw / dup signup / pw < 8 / no cookie | `401` / `409` / `400` / `401` |
+| **restart server, reuse cookie** | `/me` still `200` — session is in SQLite |
+
+`.tables` → `archived_files sessions shoot_files shoots users` (migrations
+0001–0004 all applied).
+
+### Still open
+
+- `internal/shoot/shoot.go` is an orphan stub in the tree (Feature 4 WIP) with
+  unused imports — doesn't compile, isn't imported anywhere, so
+  `go run ./cmd/relic` is fine but `go build ./...` module-wide fails there.
+- No rate-limiting / lockout on `login`. Session cleanup (expired rows) is
+  lazy — checked on read, never swept.
+- Feature 4 (shoots + upload, the 2 GB / 200-file streaming cap) is tables
+  only so far.

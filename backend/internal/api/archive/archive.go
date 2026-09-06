@@ -1,29 +1,38 @@
 package archive
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Koded0214h/relic/backend/internal/db"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
 	"github.com/Koded0214h/relic/backend/internal/job"
 )
 
-type Handler struct {
+var (
 	runner *job.Runner
+	sqlDB  *sql.DB
+)
+
+// Init wires the shared dependencies. Called once from main before Mount.
+func Init(rn *job.Runner, database *sql.DB) {
+	runner = rn
+	sqlDB = database
 }
 
-func Mount(r chi.Router, runner *job.Runner) {
-	h := &Handler{runner: runner}
-	r.Post("/shoots/{shootID}/archive", h.startArchive)
-	r.Get("/jobs/{jobID}", h.getJob)
-	r.Get("/jobs/{jobID}/events", h.streamJob)
+func Mount(r chi.Router) {
+	r.Post("/shoots/{shootID}/archive", startArchive)
+	r.Get("/jobs/{jobID}", getJob)
+	r.Get("/jobs/{jobID}/events", streamJob)
 }
 
-func (h *Handler) startArchive(w http.ResponseWriter, r *http.Request) {
+func startArchive(w http.ResponseWriter, r *http.Request) {
 	shootID := chi.URLParam(r, "shootID")
 	jobID := "job_" + shootID
 
@@ -35,17 +44,20 @@ func (h *Handler) startArchive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.runner.Start(jobID, paths, func(res job.Result) {
-		// TODO: once the index exists, persist res.Hash / res.Recipe
-		// keyed by file ID here. For now just visible via logs.
+	runner.Start(jobID, paths, func(res job.Result) {
+		if _, err := db.InsertArchiveFile(sqlDB, shootID, res.Path, res.Size, res.StoredSize, res.Hash, res.Recipe); err != nil {
+			// TODO: surface this on the job's error state once job.Job
+			// supports per-file errors, not just fatal ones.
+			fmt.Printf("index write failed for %s: %v\n", res.Path, err)
+		}
 	})
 
 	httpx.JSON(w, http.StatusAccepted, map[string]string{"job_id": jobID})
 }
 
-func (h *Handler) getJob(w http.ResponseWriter, r *http.Request) {
+func getJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "jobID")
-	j, ok := h.runner.Get(id)
+	j, ok := runner.Get(id)
 	if !ok {
 		httpx.Error(w, http.StatusNotFound, "not_found", "job not found")
 		return
@@ -53,7 +65,7 @@ func (h *Handler) getJob(w http.ResponseWriter, r *http.Request) {
 	httpx.JSON(w, http.StatusOK, j)
 }
 
-func (h *Handler) streamJob(w http.ResponseWriter, r *http.Request) {
+func streamJob(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "jobID")
 
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -73,7 +85,7 @@ func (h *Handler) streamJob(w http.ResponseWriter, r *http.Request) {
 		default:
 		}
 
-		j, ok := h.runner.Get(id)
+		j, ok := runner.Get(id)
 		if !ok {
 			return
 		}

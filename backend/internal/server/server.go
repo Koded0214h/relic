@@ -1,8 +1,6 @@
 package server
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -14,20 +12,16 @@ import (
 	"github.com/Koded0214h/relic/backend/internal/api/files"
 	"github.com/Koded0214h/relic/backend/internal/config"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
-
-	"github.com/Koded0214h/relic/backend/internal/codec"
-	"github.com/Koded0214h/relic/backend/internal/codec/generic"
-	"github.com/Koded0214h/relic/backend/internal/codec/jpg"
-	"github.com/Koded0214h/relic/backend/internal/codec/raw"
-	"github.com/Koded0214h/relic/backend/internal/job"
-	"github.com/Koded0214h/relic/backend/internal/store"
+	authapi "github.com/Koded0214h/relic/backend/internal/api/auth"
 )
 
 type Server struct {
-	cfg		config.Config
-	Router	chi.Router
+	cfg    config.Config
+	Router chi.Router
 }
 
+// New builds the HTTP router. The archive/files packages must already have
+// had Init called (from main) — this only mounts their routes.
 func New(cfg config.Config) *Server {
 	r := chi.NewRouter()
 
@@ -38,28 +32,20 @@ func New(cfg config.Config) *Server {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string {cfg.CORSOrigin},
-		AllowedMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Accept", "Content-Type"},
+		AllowedOrigins:   []string{cfg.CORSOrigin},
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Content-Type"},
 		AllowCredentials: true,
-		MaxAge: 300,
+		MaxAge:           300,
 	}))
 
-	objStore, err := store.New(cfg.DataDir + "/objects")
-	if err != nil { log.Fatalf("store init: %v", err) }
-	// Order matters: specific codecs are tried before the generic fallback.
-	// jpg/raw self-disable (or error out to the fallback) if cjxl/djxl
-	// aren't on PATH.
-	registry := codec.NewRegistry(generic.New(), jpg.New(), raw.New())
-	runner := job.NewRunner(objStore, registry)
-
-	s:= &Server{cfg: cfg, Router: r}
+	s := &Server{cfg: cfg, Router: r}
 
 	r.Get("/healthz", s.health)
 	r.Route("/api", func(r chi.Router) {
-		// auth.Mount(r)     — Ridwan
-		// shoots.Mount(r)   — Ridwan
-		archive.Mount(r, runner)
+		authapi.Mount(r)
+		// shoots.Mount(r) — Ridwan
+		archive.Mount(r)
 		files.Mount(r)
 	})
 
@@ -67,18 +53,8 @@ func New(cfg config.Config) *Server {
 }
 
 func (s *Server) health(w http.ResponseWriter, r *http.Request) {
-	httpx.JSON(w, http.StatusOK, map[string]string {
+	httpx.JSON(w, http.StatusOK, map[string]string{
 		"status": "ok",
-		"env": s.cfg.Env,
+		"env":    s.cfg.Env,
 	})
-}
-
-func JSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
-}
-
-func Error(w http.ResponseWriter, status int, code, msg string) {
-	httpx.JSON(w, status, map[string]string{"error": msg, code: code})
 }
