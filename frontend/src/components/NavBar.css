@@ -4,7 +4,7 @@
     align-items: center;
     width: 100%;
     padding: 2em 4em;
-    border-bottom: 1px solid #888888;
+    border-bottom: 3px solid #E5E7EB;
 }
 
 .logo, 
@@ -31,16 +31,15 @@
 
 .nav-links a {
     font-family: "Inter", sans-serif;
-    color: #888888;
 }
 
 .get-started a {
-    background-color: #FF8C00;
+    background: transparent;
     padding: .75em 1.25em;
-    color: #131313;
     text-transform: uppercase;
     font-family: "Inter", sans-serif;
     font-weight: 700;
+    border: 3px solid #E5E7EB;
 }
 
 button {
@@ -51,12 +50,12 @@ button {
 .hamburger-menu .menu {
     background: transparent;
     border: none;
-    color: #FF8C00;
+    color: #000000;
     display: none;
 }
 
 
-@media (max-width: 700px) {
+@media (max-width: 760px) {
     .navbar {
         position: relative;
     }
@@ -74,11 +73,11 @@ button {
         left: 0;
         background-color: #131313;
         border: 1px solid #888888;
-        height: 35vh;
-        padding: 5em 0;
+        height: 40vh;
+        padding: 2em 0;
         align-items: center;
         justify-content: flex-start;
-        gap: 5em;
+        gap: 3em;
     }
 
     .navbar .nav-right .nav-links,
@@ -92,11 +91,27 @@ button {
 
     .nav-right a {
         font-size: 2rem;
+        color: #E7E5EB;
+    }
+
+    .get-started a {
+        font-size: 1rem;
+        color: #E5E7EB;
+    }
+}
+
+@media (max-width: 500px) {
+    .navbar .nav-right  {
+        gap: 3em;
     }
 }
 
 @media (max-width: 400px) {
     .navbar {
         padding: 2em 1em;
+    }
+
+    .navbar .nav-right {
+        height: 40vh;
     }
 }

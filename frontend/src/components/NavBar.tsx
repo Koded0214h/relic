@@ -23,13 +23,13 @@ function NavBar() {
 
             <div className={`nav-right ${isOpen ? 'show': ''}`}>
                 <ul className="nav-links">
-                    <li><a href="#">Product</a></li>
-                    <li><a href="#">How it works</a></li>
-                    <li><a href="#">About</a></li>
+                    <li><a href="#">Archive</a></li>
+                    <li><a href="#">Integrity</a></li>
+                    <li><a href="#">Philosophy</a></li>
                 </ul>
 
                 <ul className='get-started'>
-                    <li><a href="#">Join the waitlist</a></li>
+                    <li><a href="#">Join the Waitlist</a></li>
                 </ul>
             </div>
         </div>

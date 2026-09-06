@@ -1,7 +1,10 @@
 import NavBar from "../components/NavBar";
 import Hero from "../components/Hero";
-import Features from "../components/Features";
+import Process from "../components/Process";
 import Footer from "../components/Footer";
+import Features from "../components/Features";
+import Cta from "../components/Cta";
+import Integrity from "../components/Integrity";
 
 function LandingPage() {
 
@@ -14,8 +17,11 @@ function LandingPage() {
 
             <main>
                 <Features />
+                <Process />
+                <Integrity />
+                <Cta />
             </main>
-            
+
             <Footer />
         </div>
     )
