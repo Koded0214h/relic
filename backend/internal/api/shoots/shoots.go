@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/Koded0214h/relic/backend/internal/auth"
+	"github.com/Koded0214h/relic/backend/internal/db"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
 	"github.com/Koded0214h/relic/backend/internal/shoot"
 )
@@ -92,17 +93,36 @@ func get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files, err := shoot.ListFiles(sqlDB, s.ID)
+	statuses, err := db.ListFileStatus(sqlDB, s.ID)
 	if err != nil {
 		httpx.Error(w, http.StatusInternalServerError, "server_error", "could not load shoot")
-		return
+		return 
 	}
 
-	resp := map[string]any{"id": s.ID, "name": s.Name, "files": files}
-	if s.ArchivedAt.Valid {
-		resp["archived_at"] = s.ArchivedAt.Time
+	var savings shoot.Savings
+	savings.FilesTotal = len(statuses)
+
+	for _, f := range statuses {
+		savings.OriginalBytes += f.OriginalSize
+		if f.Archived {
+			savings.FilesArchived++
+			savings.StoredBytes += f.StoredSize
+		} else {
+			savings.StoredBytes += f.OriginalSize
+		}
 	}
-	httpx.JSON(w, http.StatusOK, resp)
+
+	httpx.JSON(w, http.StatusOK, map[string]any {
+		"id":				s.ID,
+		"name":				s.Name,
+		"archived_at":		s.ArchivedAt.Time,
+		"files":			statuses,
+		"files_total":		savings.FilesTotal,
+		"files_archived": 	savings.FilesArchived,
+		"original_bytes":	savings.OriginalBytes,
+		"stored_bytes":		savings.StoredBytes,
+		"compression_pct":  savings.CompressionPct(),
+	})
 }
 
 func remove(w http.ResponseWriter, r *http.Request) {
@@ -257,3 +277,4 @@ func timeline(w http.ResponseWriter, r *http.Request) {
 
 	httpx.JSON(w, http.StatusOK, files)
 }
+

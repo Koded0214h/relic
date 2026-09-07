@@ -44,6 +44,14 @@ type FileWithMeta struct {
 	ISO			sql.NullInt64
 }
 
+type Savings struct {
+	OriginalBytes	int64
+	StoredBytes		int64
+	FilesTotal		int
+	FilesArchived	int
+}
+
+
 type Summary struct {
 	Shoot
 	FileCount int
@@ -174,4 +182,10 @@ func ListFilesWithMeta(db *sql.DB, shootID string) ([]FileWithMeta, error) {
 	}
 
 	return out, rows.Err()
+}
+
+
+func (s Savings) CompressionPct() float64 {
+	if s.OriginalBytes == 0 { return 0 }
+	return  100 * (1 - float64(s.StoredBytes)/float64(s.OriginalBytes))
 }

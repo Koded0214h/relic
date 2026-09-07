@@ -13,7 +13,6 @@ import (
 	authapi "github.com/Koded0214h/relic/backend/internal/api/auth"
 	"github.com/Koded0214h/relic/backend/internal/api/files"
 	"github.com/Koded0214h/relic/backend/internal/api/shoots"
-	"github.com/Koded0214h/relic/backend/internal/auth"
 	"github.com/Koded0214h/relic/backend/internal/config"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
 )
@@ -47,7 +46,7 @@ func New(cfg config.Config, database *sql.DB) *Server {
 
 	r.Get("/healthz", s.health)
 	r.Route("/api", func(r chi.Router) {
-		authapi.Mount(r) // signup/login are public; /me is guarded inside authapi itself
+		authapi.Mount(r) 
 
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Middleware(database))

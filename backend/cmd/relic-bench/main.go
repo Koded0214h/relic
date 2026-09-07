@@ -17,15 +17,16 @@ import (
 )
 
 
-type result struct { 
-	path      string
-	ext       string
-	codec     string
-	original  int64
-	encoded   int64
-	verified  bool
-	err       error
-	duration  time.Duration
+type result struct {
+	path     string
+	ext      string
+	codec    string
+	original int64
+	encoded  int64
+	verified bool
+	err      error
+	encDur   time.Duration // EncodeVerified (encode + internal verify round-trip)
+	decDur   time.Duration // standalone Decode used for the byte-equality check
 }
 
 func main() {
@@ -70,24 +71,29 @@ func bench(reg codec.Registry, path string) result {
 		Head: raw[:min(len(raw), 64*1024)],
 	}
 
-	start := time.Now()
-
+	encStart := time.Now()
 	var encoded bytes.Buffer
 	rec, err := reg.EncodeVerified(f, bytes.NewReader(raw), &encoded)
-	if err != nil { return result{path: path, ext: ext, err: err, duration: time.Since(start)} }
+	encDur := time.Since(encStart)
+	if err != nil {
+		return result{path: path, ext: ext, err: err, encDur: encDur}
+	}
 
+	decStart := time.Now()
 	var decoded bytes.Buffer
 	verifyErr := reg.Decode(rec, bytes.NewReader(encoded.Bytes()), &decoded)
-	verified:= verifyErr == nil && bytes.Equal(raw, decoded.Bytes())
+	decDur := time.Since(decStart)
+	verified := verifyErr == nil && bytes.Equal(raw, decoded.Bytes())
 
-	return result {
-		path: path,
-		ext: ext,
-		codec: rec.Codec,
+	return result{
+		path:     path,
+		ext:      ext,
+		codec:    rec.Codec,
 		original: int64(len(raw)),
-		encoded: int64(encoded.Len()),
+		encoded:  int64(encoded.Len()),
 		verified: verified,
-		duration: time.Since(start),
+		encDur:   encDur,
+		decDur:   decDur,
 	}
 }
 
@@ -148,15 +154,37 @@ func printSummary(results []result) {
 	}
 
 	fmt.Println()
-	if totalOrig > 0{
+	if totalOrig > 0 {
 		overallRatio := 100 * float64(totalEnc) / float64(totalOrig)
 		fmt.Printf("TOTAL: %s -> %s   saved %.1f%%\n",
 			humanBytes(totalOrig), humanBytes(totalEnc), 100-overallRatio)
+		fmt.Printf("       %d -> %d bytes   (%d saved)\n",
+			totalOrig, totalEnc, totalOrig-totalEnc)
 	}
 
-	if failures > 0 {
-		fmt.Printf("FAILURES: %d file(s) errored or faild verification\n", failures)
+	var encDur, decDur time.Duration
+	verified := 0
+	for _, r := range results {
+		encDur += r.encDur
+		decDur += r.decDur
+		if r.err == nil && r.verified {
+			verified++
+		}
 	}
+	fmt.Printf("ENCODE: %s   (%.1f MB/s)\n", encDur.Round(time.Millisecond), mbps(totalOrig, encDur))
+	fmt.Printf("DECODE: %s   (%.1f MB/s)\n", decDur.Round(time.Millisecond), mbps(totalOrig, decDur))
+	fmt.Printf("VERIFIED: %d/%d byte-identical\n", verified, len(results))
+
+	if failures > 0 {
+		fmt.Printf("FAILURES: %d file(s) errored or failed verification\n", failures)
+	}
+}
+
+func mbps(bytesN int64, d time.Duration) float64 {
+	if d <= 0 {
+		return 0
+	}
+	return float64(bytesN) / 1e6 / d.Seconds()
 }
 
 func humanBytes(n int64) string {

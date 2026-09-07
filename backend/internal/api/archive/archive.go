@@ -1,7 +1,9 @@
 package archive
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,6 +32,7 @@ func Init(rn *job.Runner, database *sql.DB) {
 
 func Mount(r chi.Router) {
 	r.Post("/shoots/{shootID}/archive", startArchive)
+	r.Post("/shoots{shootID}/verify", verifyShoot)
 	r.Get("/jobs/{jobID}", getJob)
 	r.Get("/jobs/{jobID}/events", streamJob)
 }
@@ -125,4 +128,67 @@ func streamJob(w http.ResponseWriter, r *http.Request) {
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
+}
+
+
+type verifyResult struct {
+	FileID      string `json:"file_id"`
+	Path        string `json:"path"`
+	OK          bool   `json:"ok"`
+	Error       string `json:"error,omitempty"`
+}
+
+func verifyShoot(w http.ResponseWriter, r *http.Request) {
+	userID, _ := auth.UserID(r)
+	shootID := chi.URLParam(r, "shootID")
+
+	if _, err := shoot.Get(sqlDB, shootID, userID); err != nil {
+		httpx.Error(w, http.StatusNotFound, "not_found", "shoot not found")
+		return 
+	}
+
+	files, err := db.ListArchiveFiles(sqlDB, shootID)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "server_error", "could not load shoot")
+		return 
+	}
+
+	results := makr([]verifyResult, 0, len(files))
+	corrupted := 0
+
+	for _, af := range files {
+		res := verifyResult{FileID: ad.ID, Path: af.Path}
+		obj, err := objStore.get(af.Hash)
+		if err != nil {
+			res.Error = "object missing from store"
+			results = append(results, res)
+			corrupted++
+			continue
+		}
+
+		h := sha256.New()
+		_, err = io.Copy(h, obj)
+		obj.Close()
+		if err != nil {
+			res.Error = "read error: " + err.Error()
+			results = append(results, res)
+			corrupted++
+			continue
+		}	
+
+		if hex.EncodeToString(h.Sum(nil)) != af.Hash {
+			res.Error = "hash mismatch -- object corrupted"
+			corrupted+=
+		} else {
+			res.OK = true
+		}
+		results = append(results, res)
+	}
+
+	httpx.JSON(w, http.StatusOK, map[string]any{
+		"files_checked": 	len(files),
+		"corrupted":		corrupted,
+		"healthy":			corrupted = 0,
+		"results": 			results,
+	})
 }
