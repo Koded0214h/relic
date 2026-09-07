@@ -7,9 +7,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Koded0214h/relic/backend/internal/auth"
 	"github.com/Koded0214h/relic/backend/internal/codec"
 	"github.com/Koded0214h/relic/backend/internal/db"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
+	"github.com/Koded0214h/relic/backend/internal/shoot"
 	"github.com/Koded0214h/relic/backend/internal/store"
 )
 
@@ -28,11 +30,17 @@ func Mount(r chi.Router) {
 }
 
 func download(w http.ResponseWriter, r *http.Request) {
+	userID, _ := auth.UserID(r)
 	id := chi.URLParam(r, "fileID")
 
 	af, err := db.GetArchivedFile(sqlDB, id)
 	if err != nil {
 		httpx.Error(w, http.StatusNotFound, "not_found", "file not found")
+		return
+	}
+
+	if _, err := shoot.Get(sqlDB, af.ShootID, userID); err != nil {
+		httpx.Error(w, http.StatusNotFound, "not_found","file not found")
 		return
 	}
 

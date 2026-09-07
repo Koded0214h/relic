@@ -3,16 +3,18 @@ package archive
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Koded0214h/relic/backend/internal/auth"
 	"github.com/Koded0214h/relic/backend/internal/db"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
 	"github.com/Koded0214h/relic/backend/internal/job"
+	"github.com/Koded0214h/relic/backend/internal/shoot"
 )
 
 var (
@@ -33,19 +35,32 @@ func Mount(r chi.Router) {
 }
 
 func startArchive(w http.ResponseWriter, r *http.Request) {
+	userID, _ := auth.UserID(r)
 	shootID := chi.URLParam(r, "shootID")
-	jobID := "job_" + shootID
 
-	// TODO: once Ridwan's upload endpoint exists, look up this shoot's
-	// real uploaded file paths from the DB instead of the test corpus.
-	paths, err := testCorpusPaths()
-	if err != nil {
-		httpx.Error(w, http.StatusInternalServerError, "corpus_error", err.Error())
+	s, err := shoot.Get(sqlDB, shootID, userID)
+	if errors.Is(err, shoot.ErrNotFound) {
+		httpx.Error(w, http.StatusNotFound, "not_found", "shoot not found")
+		return
+	} else if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "server_error", "could not load shoot")
 		return
 	}
 
+	files, err := shoot.ListFiles(sqlDB, s.ID)
+	if err != nil || len(files) == 0 {
+		httpx.Error(w, http.StatusBadRequest, "no_files", "shoot has no uploaded files")
+		return
+	}
+
+	paths := make([]string, len(files))
+	for i, f := range files {
+		paths[i] = f.StagingPath
+	}
+
+	jobID := "job_" + s.ID
 	runner.Start(jobID, paths, func(res job.Result) {
-		if _, err := db.InsertArchiveFile(sqlDB, shootID, res.Path, res.Size, res.StoredSize, res.Hash, res.Recipe); err != nil {
+		if _, err := db.InsertArchiveFile(sqlDB, s.ID, res.Path, res.Size, res.StoredSize, res.Hash, res.Recipe); err != nil {
 			// TODO: surface this on the job's error state once job.Job
 			// supports per-file errors, not just fatal ones.
 			fmt.Printf("index write failed for %s: %v\n", res.Path, err)
@@ -101,12 +116,4 @@ func streamJob(w http.ResponseWriter, r *http.Request) {
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
-}
-
-func testCorpusPaths() ([]string, error) {
-	matches, err := filepath.Glob("internal/testdata/*")
-	if err != nil {
-		return nil, err
-	}
-	return matches, nil
 }

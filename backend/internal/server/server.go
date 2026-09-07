@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -9,10 +10,12 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/Koded0214h/relic/backend/internal/api/archive"
+	authapi "github.com/Koded0214h/relic/backend/internal/api/auth"
 	"github.com/Koded0214h/relic/backend/internal/api/files"
+	"github.com/Koded0214h/relic/backend/internal/api/shoots"
+	"github.com/Koded0214h/relic/backend/internal/auth"
 	"github.com/Koded0214h/relic/backend/internal/config"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
-	authapi "github.com/Koded0214h/relic/backend/internal/api/auth"
 )
 
 type Server struct {
@@ -20,9 +23,10 @@ type Server struct {
 	Router chi.Router
 }
 
-// New builds the HTTP router. The archive/files packages must already have
-// had Init called (from main) — this only mounts their routes.
-func New(cfg config.Config) *Server {
+// New builds the HTTP router. The api packages must already have had Init
+// called (from main) — this only mounts their routes. database backs the
+// session-auth middleware that guards the private routes.
+func New(cfg config.Config, database *sql.DB) *Server {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
@@ -43,10 +47,14 @@ func New(cfg config.Config) *Server {
 
 	r.Get("/healthz", s.health)
 	r.Route("/api", func(r chi.Router) {
-		authapi.Mount(r)
-		// shoots.Mount(r) — Ridwan
-		archive.Mount(r)
-		files.Mount(r)
+		authapi.Mount(r) // signup/login are public; /me is guarded inside authapi itself
+
+		r.Group(func(r chi.Router) {
+			r.Use(auth.Middleware(database))
+			shoots.Mount(r)
+			archive.Mount(r)
+			files.Mount(r)
+		})
 	})
 
 	return s

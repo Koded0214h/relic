@@ -573,3 +573,89 @@ structural mistake) — rewrote to compile and pass the full loop.
   lazy — checked on read, never swept.
 - Feature 4 (shoots + upload, the 2 GB / 200-file streaming cap) is tables
   only so far.
+
+---
+
+## Shoots + upload (Feature 4) (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+Handed-off Feature-4 drafts were broken pseudocode across five files
+(scrambled handler bodies, `htpp`, `chi.URLParams`, `fielpath`, `fund`,
+`InsertArchivedFile`, undefined `mr`/`dir`/`sf`, `list()` holding create's
+body, `remove()` holding upload's body, …). Rewrote them.
+
+- **`internal/shoot/shoot.go`** (`package shoot`) — the domain layer.
+  `Create`, `Get(shootID, userID)` (ownership-scoped; wrong id or wrong
+  owner both → `ErrNotFound`), `ListForUser`, `Delete` (cascades
+  shoot_files), `Stats` (count + total bytes, for the caps), `AddFile`,
+  `ListFiles`. `MaxShootBytes = 2<<30` (2 GiB), `MaxShootFiles = 200`.
+  `File.StagingPath` is `json:"-"` so the internal disk path isn't leaked.
+- **`internal/api/shoots/shoots.go`** (`package shoots`, new) — HTTP layer.
+  `Init(db, dataDir)` (creates `<dataDir>/staging`). Routes: `GET/POST
+  /shoots`, `GET/DELETE /shoots/{id}`, `POST /shoots/{id}/files`.
+  - `upload` streams `multipart` parts through `writeCapped`, which enforces
+    the per-shoot byte cap **while copying** (`io.LimitReader(part,
+    remaining+1)`, delete + `quota_exceeded` if it goes over) — a client
+    can't beat it with a lying Content-Length. File-count cap checked per
+    part. Staging files are `<uuid><original ext>` so the codec registry can
+    still dispatch on extension at archive time.
+- **`internal/api/archive/archive.go`** — `startArchive` now ownership-checks
+  the shoot, pulls its `shoot_files` staging paths (404 / `no_files` as
+  appropriate), and feeds those to `runner.Start` instead of the test glob.
+  `job_<shootID>` job id. `onResult` → `db.InsertArchiveFile`.
+- **`internal/api/files/files.go`** — `download` adds an ownership check
+  (`shoot.Get(af.ShootID, userID)`), 404 on miss.
+- **`internal/server/server.go`** — `New(cfg, database)`; `/api` splits into
+  public (`authapi.Mount` — signup/login, plus its own guarded `/me`) and a
+  `r.Group` behind `auth.Middleware(database)` wrapping shoots + archive +
+  files.
+- **`cmd/relic/main.go`** — `shoots.Init(database, cfg.DataDir)`;
+  `server.New(cfg, database)`.
+
+### Verified end to end
+
+`RELIC_PORT=8080 ./relic`, fresh DB:
+
+```
+signup A → POST /api/shoots {"name":"Test Shoot"} → 201 {id,name}
+POST /api/shoots/<id>/files  -F sample.jpg -F sample1.txt
+  → 201 [{id,shoot_id,filename,size}, …]
+GET  /api/shoots/<id>        → {id,name,files:[…]}
+POST /api/shoots/<id>/archive → {"job_id":"job_<id>"}; job → done 2/2
+
+archived_files (shoot_id=<id>):
+  …  data/staging/<uuid>.jpg  jpg-jxl     ← ext preserved, specialized codec fired
+  …  data/staging/<uuid>.txt  generic
+
+download <jpg id> → cmp vs sample.jpg  → identical ✓
+download <txt id> → cmp vs sample1.txt → identical ✓
+```
+
+**Security check (user B against user A's shoot):**
+
+| request | result |
+|---|---|
+| `GET /api/shoots/<A's id>` | `404` |
+| `GET /api/files/<A's archived id>/download` | `404` |
+| `POST /api/shoots/<A's id>/archive` | `404` |
+| any private route, no cookie | `401` |
+
+### Bug caught + fixed this session
+
+Uploads first stored staging files as bare `<uuid>` (no extension), so
+`jpg.CanHandle` (ext + magic gated) never matched and the JPEG archived as
+`generic` — silently losing the jpg-jxl / raw-preview compression from
+Features 1–2. Staging name now carries the original extension.
+
+### Still open
+
+- `archived_files.path` is the staging path (`data/staging/<uuid>.jpg`), so
+  the download `Content-Disposition` filename is a uuid, not the original
+  name. Carry `shoot_files.filename` through if that matters.
+- Orphan staging files: nothing deletes them after a successful archive, and
+  a failed `AddFile` mid-batch leaves earlier parts on disk + in the DB.
+- Integrity-model gap in `files.download` still deferred (buffer + re-hash).
+- `login` still has no rate-limiting; expired sessions never swept.

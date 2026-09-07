@@ -23,6 +23,7 @@ import (
 	"github.com/Koded0214h/relic/backend/internal/server"
 	"github.com/Koded0214h/relic/backend/internal/store"
 	authapi "github.com/Koded0214h/relic/backend/internal/api/auth"
+	"github.com/Koded0214h/relic/backend/internal/api/shoots"
 )
 
 func main() {
@@ -56,10 +57,11 @@ func run() error {
 	archive.Init(runner, database)
 	files.Init(database, objStore, reg)
 	authapi.Init(database, !cfg.Dev())
+	shoots.Init(database, cfg.DataDir)
 
 	srv := &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
-		Handler:           server.New(cfg).Router,
+		Handler:           server.New(cfg, database).Router,
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
