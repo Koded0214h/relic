@@ -89,6 +89,16 @@ It’s an archival storage engine—with a photographer‑friendly web interface
 
 ---
 
+## Benchmarks
+
+A first run of the benchmark suite against a real library (2,120 files, 1.67 GB — mostly PNG, some JPEG/HEIC), comparing Relic's format‑aware pipeline to general‑purpose compressors:
+
+![Relic Benchmark v2 – comparison against ZIP, xz, zstd, gzip, bzip2 and lz4](img/relic.png)
+
+Relic produces the smallest archive (3.81% saved) while using the least CPU of any option that comes close on ratio, and verifies every file on the way in. Numbers will keep moving as the suite matures.
+
+---
+
 ## The big question
 
 > How much smaller can a real photography library get while guaranteeing every original file reconstructs exactly?
