@@ -45,7 +45,7 @@ func Extract(data []byte) Metadata {
 	if t, ok := tags["FocalLength"]; ok { m.FocalLength = formatRational(t.Value, "%.0fmm") }
 	if t, ok := tags["FNumber"]; ok { m.Aperture = formatRational(t.Value, "f/%.1f") }
 	if t, ok := tags["ExposureTime"]; ok { m.Shutter = asString(t.Value) }
-	if t, ok := tags["ISOSpeedRatings"]; ok { . if v, ok := t.Value.(uint16); ok { m.ISO = int(v)} }
+	if t, ok := tags["ISOSpeedRatings"]; ok { if v, ok := t.Value.(uint16); ok { m.ISO = int(v)} }
 
 	return m
 }

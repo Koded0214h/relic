@@ -35,6 +35,7 @@ func Mount(r chi.Router) {
 	r.Get("/shoots", list)
 	r.Post("/shoots", create)
 	r.Get("/shoots/{shootID}", get)
+	r.Get("/shoots/{shootID}/timeline", timeline)
 	r.Delete("/shoots/{shootID}", remove)
 	r.Post("/shoots/{shootID}/files", upload)
 }
@@ -236,4 +237,23 @@ func safeName(name string) string {
 		return "unnamed"
 	}
 	return name
+}
+
+
+func timeline(w http.ResponseWriter, r *http.Request) {
+	userID, _ := auth.UserID(r)
+	shootID := chi.URLParam(r, "shootID")
+
+	if _, err := shoot.Get(sqlDB, shootID, userID); err != nil {
+		httpx.Error(w, http.StatusNotFound, "not_found", "shoot not found")
+		return
+	}
+
+	files, err := shoot.ListFilesWithMeta(sqlDB, shootID)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "server_error", "could not load shoot")
+		return 
+	}
+
+	httpx.JSON(w, http.StatusOK, files)
 }

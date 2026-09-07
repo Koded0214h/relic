@@ -63,7 +63,6 @@ func UpdateFielMetadata(db *sql.DB, shootFileID string, m meta.Metadata) error {
 	_, err := db.Exec(
 		`UPDATE shoot_files SET taken_at = ?, camera_make = ?, camera_model = ?,
 		focal_length =?, aperature = ?, shutter = ?, iso = ? WHERE id = ?`,
-		m.TakenAt, m.CameraMake, m.CameraModel, m.Lens, m.FocalLength, m.Aperture, m.Shutter, m.ISO
-	)
+		m.TakenAt, m.CameraMake, m.CameraModel, m.Lens, m.FocalLength, m.Aperture, m.Shutter, m.ISO, shootFileID)
 	return err
 }

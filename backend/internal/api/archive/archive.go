@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	authapi "github.com/Koded0214h/relic/backend/internal/api/auth"
+	"github.com/Koded0214h/relic/backend/internal/auth"
 	"github.com/Koded0214h/relic/backend/internal/db"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
 	"github.com/Koded0214h/relic/backend/internal/job"
@@ -60,7 +60,7 @@ func startArchive(w http.ResponseWriter, r *http.Request) {
 
 	jobID := "job_" + s.ID
 
-	pathToID  := map[string]string {}
+	pathToID := map[string]string{}
 	for _, f := range files {
 		pathToID[f.StagingPath] = f.ID
 	}

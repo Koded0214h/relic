@@ -23,7 +23,7 @@ func GroupSequence(files []FileWithMeta) []Sequence {
 
 	flush := func() {
 		if len(current) >- 2 {
-			sequences = append(sequences{ID: uuid.NewString(), Files: current})
+			sequences = append(sequences, Sequence{ID: uuid.NewString(), Files: current})
 		}
 		current = nil
 	}

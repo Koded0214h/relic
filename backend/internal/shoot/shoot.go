@@ -153,3 +153,25 @@ func ListFiles(db *sql.DB, shootID string) ([]File, error) {
 	}
 	return out, rows.Err()
 }
+
+func ListFilesWithMeta(db *sql.DB, shootID string) ([]FileWithMeta, error) {
+	rows, err := db.Query(`
+		SELECT id, shoot_id, filename, size, staging_path,
+		       taken_at, camera_make, camera_model, lens, focal_length, aperture, shutter, iso
+		FROM shoot_files WHERE shoot_id = ?
+		ORDER BY taken_at ASC`, shootID)
+
+	if err != nil { return nil, err }
+	defer rows.Close()
+
+	var out []FileWithMeta
+	for rows.Next() {
+		var f FileWithMeta
+		if err := rows.Scan(&f.ID, &f.ShootID, &f.Filename, &f.Size, &f.StagingPath,
+			&f.TakenAt, &f.CameraMake, &f.CameraModel, &f.Lens, &f.FocalLength, &f.Aperture, &f.Shutter, &f.ISO); err != nil { return nil, err }
+
+		out = append(out, f)
+	}
+
+	return out, rows.Err()
+}
