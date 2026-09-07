@@ -659,3 +659,52 @@ Features 1–2. Staging name now carries the original extension.
   a failed `AddFile` mid-batch leaves earlier parts on disk + in the DB.
 - Integrity-model gap in `files.download` still deferred (buffer + re-hash).
 - `login` still has no rate-limiting; expired sessions never swept.
+
+---
+
+## Close the restore-buffering gap (Feature 2, for real) (this session)
+
+Commit: _pending — not committed yet; fill in hash after `git commit`_
+
+### Summary of changes
+
+- **`backend/internal/api/files/files.go`** — `download` no longer streams
+  `registry.Decode` straight to the `ResponseWriter`. It now:
+  1. decodes into an `os.CreateTemp` file (deleted on return);
+  2. hashes the **encoded** stream while decoding, via
+     `io.TeeReader(encoded, sha256)`, and checks it equals `af.Hash`;
+  3. only then sets `Content-Length` (now accurate) + `Content-Disposition`
+     and `io.Copy`s the temp file to the client.
+
+  A decode failure or a hash mismatch now yields a clean
+  `500 {"code":"decode_error"|"integrity_error"}` with **no body bytes**,
+  instead of a truncated `200`.
+
+### Deviation from the handoff snippet
+
+The provided snippet hashed the **decoded** temp file and compared it to
+`af.Hash` — but `af.Hash` is the SHA-256 of the **encoded** object
+(`store.Put` hashes its input, which is the encoder output; `job.archiveOne`
+even comments "hash the *encoded* bytes"). That check would have failed on
+every download where encoding changed the bytes (i.e. all of them). Kept the
+snippet's stated intent — "verify the object store still holds exactly what
+we put there" — but hash the encoded stream as it's read (`TeeReader`),
+which is also one pass instead of two.
+
+Still true, per the handoff: this proves the stored object is intact, not
+that the decoded output matches the original upload — that proof happened
+once at archive time in `EncodeVerified`. Storing an original-file hash so
+restore can check both is a later addition.
+
+### Verified end to end
+
+- Full chain (signup → shoot → upload → archive → download) still returns
+  **byte-identical** files for both `jpg-jxl` and `generic`; `Content-Length`
+  header now present and correct.
+- Flipped one byte in a stored object on disk → download returns
+  `500 {"code":"decode_error","error":"restore failed"}`, zero body bytes
+  (zstd's own decoder trips first here; the hash check is the backstop for
+  corruption a codec doesn't notice).
+- `go build ./...` / `go vet ./...` pass for everything except the unrelated
+  new `internal/meta` (Feature 5 WIP — needs `go get github.com/dsoprea/
+  go-exif/v3`, not imported anywhere yet).

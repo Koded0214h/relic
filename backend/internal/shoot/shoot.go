@@ -32,6 +32,18 @@ type File struct {
 	StagingPath string `json:"-"` // internal disk path, not exposed
 }
 
+type FileWithMeta struct {
+	File
+	TakenAt		sql.NullTime
+	CameraMake	string
+	CameraModel string
+	Lens		string
+	FocalLength	string
+	Aperture	string
+	Shutter 	string
+	ISO			sql.NullInt64
+}
+
 type Summary struct {
 	Shoot
 	FileCount int

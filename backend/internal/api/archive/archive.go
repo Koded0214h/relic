@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/Koded0214h/relic/backend/internal/auth"
+	authapi "github.com/Koded0214h/relic/backend/internal/api/auth"
 	"github.com/Koded0214h/relic/backend/internal/db"
 	"github.com/Koded0214h/relic/backend/internal/httpx"
 	"github.com/Koded0214h/relic/backend/internal/job"
@@ -59,11 +59,20 @@ func startArchive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jobID := "job_" + s.ID
+
+	pathToID  := map[string]string {}
+	for _, f := range files {
+		pathToID[f.StagingPath] = f.ID
+	}
+
 	runner.Start(jobID, paths, func(res job.Result) {
 		if _, err := db.InsertArchiveFile(sqlDB, s.ID, res.Path, res.Size, res.StoredSize, res.Hash, res.Recipe); err != nil {
-			// TODO: surface this on the job's error state once job.Job
-			// supports per-file errors, not just fatal ones.
 			fmt.Printf("index write failed for %s: %v\n", res.Path, err)
+		}
+		if fileID, ok := pathToID[res.Path]; ok {
+			if err := db.UpdateFielMetadata(sqlDB, fileID, res.Meta); err != nil {
+				fmt.Printf("metadata write failed for %s: %v\n", res.Path, err)
+			}
 		}
 	})
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/Koded0214h/relic/backend/internal/meta"
 	"github.com/Koded0214h/relic/backend/pkg/types"
 )
 
@@ -54,4 +55,15 @@ func GetArchivedFile(db *sql.DB, id string) (ArchivedFile, error) {
 
 	af.Recipe.Blob = blob
 	return af, nil
+}
+
+func UpdateFielMetadata(db *sql.DB, shootFileID string, m meta.Metadata) error {
+	if !m.Valid { return nil }
+
+	_, err := db.Exec(
+		`UPDATE shoot_files SET taken_at = ?, camera_make = ?, camera_model = ?,
+		focal_length =?, aperature = ?, shutter = ?, iso = ? WHERE id = ?`,
+		m.TakenAt, m.CameraMake, m.CameraModel, m.Lens, m.FocalLength, m.Aperture, m.Shutter, m.ISO
+	)
+	return err
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/Koded0214h/relic/backend/internal/codec"
 	"github.com/Koded0214h/relic/backend/internal/store"
 	"github.com/Koded0214h/relic/backend/pkg/types"
+	"github.com/Koded0214h/relic/backend/internal/meta"
 )
 
 
@@ -39,6 +40,15 @@ type Status struct {
 	Error string `json:"error,omitempty"`
 }
 
+type Result struct {
+	Path		string
+	Hash 		string
+	Size		int64
+	StoredSize	int64
+	Recipe		types.Recipe
+	Meta		meta.Metadata
+}
+
 func (j *Job) snapshot() Status {
 	j.mu.Lock()
 	defer j.mu.Unlock()
@@ -49,14 +59,6 @@ func (j *Job) snapshot() Status {
 		Total: j.Total,
 		Error: j.Error,
 	}
-}
-
-type Result struct {
-	Path       string
-	Hash       string
-	Size       int64
-	StoredSize int64
-	Recipe     types.Recipe
 }
 
 type Runner struct {
@@ -136,6 +138,9 @@ func (rn *Runner) archiveOne(path string) (Result, error) {
 	head := make([]byte, 64*1024)
 	n, _ := f.Read(head)
 	head = head[:n]
+	exiBuf := make([]byte, 256*1024)
+	n2, _ := f.Read(exiBuf)
+	m := meta.Extract(exiBuf[:n2])
 	if _, err := f.Seek(0, 0); err != nil {
 		return Result{}, fmt.Errorf("seek: %w", err)
 	}
@@ -175,6 +180,7 @@ func (rn *Runner) archiveOne(path string) (Result, error) {
 		Size:       info.Size(),
 		StoredSize: storedSize,
 		Recipe:     recipe,
+		Meta:		m,
 	}, nil
 }
 

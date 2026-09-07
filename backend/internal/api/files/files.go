@@ -1,9 +1,14 @@
 package files
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
+	"io"
 	"net/http"
+	"os"
 	"path"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 
@@ -38,9 +43,8 @@ func download(w http.ResponseWriter, r *http.Request) {
 		httpx.Error(w, http.StatusNotFound, "not_found", "file not found")
 		return
 	}
-
 	if _, err := shoot.Get(sqlDB, af.ShootID, userID); err != nil {
-		httpx.Error(w, http.StatusNotFound, "not_found","file not found")
+		httpx.Error(w, http.StatusNotFound, "not_found", "file not found")
 		return
 	}
 
@@ -51,16 +55,46 @@ func download(w http.ResponseWriter, r *http.Request) {
 	}
 	defer encoded.Close()
 
-	w.Header().Set("Content-Disposition", `attachment; filename="`+path.Base(af.Path)+`"`)
-	w.Header().Set("Content-Type", "application/octet-stream")
+	// Restore into a temp file, never straight to the client: if decode
+	// fails or the stored object is corrupt we still owe a clean error
+	// response, not a truncated 200. This is what makes the integrity
+	// promise real.
+	tmp, err := os.CreateTemp("", "relic-restore-*")
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "server_error", "restore failed")
+		return
+	}
+	defer os.Remove(tmp.Name())
+	defer tmp.Close()
 
-	if err := registry.Decode(af.Recipe, encoded, w); err != nil {
-		// KNOWN ROUGH EDGE: Decode streams straight to w, so a failure
-		// after the first flush leaves the client with a truncated body
-		// under a 200. The integrity-model fix is to decode into a
-		// buffer, re-hash, and only then write w. Deferred — tracked in
-		// notes.md.
+	// af.Hash is the hash of the *encoded* bytes in the object store, so
+	// hashing the stream as we read it proves the store still holds
+	// exactly what archive wrote. The decoded output itself was already
+	// checked at archive time by EncodeVerified (full encode->decode->
+	// compare); a hash of the *original* upload isn't stored yet, so we
+	// can't re-verify that side here.
+	h := sha256.New()
+	if err := registry.Decode(af.Recipe, io.TeeReader(encoded, h), tmp); err != nil {
 		httpx.Error(w, http.StatusInternalServerError, "decode_error", "restore failed")
 		return
 	}
+	if hex.EncodeToString(h.Sum(nil)) != af.Hash {
+		httpx.Error(w, http.StatusInternalServerError, "integrity_error", "stored object failed verification")
+		return
+	}
+
+	size, err := tmp.Seek(0, io.SeekEnd)
+	if err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "server_error", "restore failed")
+		return
+	}
+	if _, err := tmp.Seek(0, io.SeekStart); err != nil {
+		httpx.Error(w, http.StatusInternalServerError, "server_error", "restore failed")
+		return
+	}
+
+	w.Header().Set("Content-Disposition", `attachment; filename="`+path.Base(af.Path)+`"`)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", strconv.FormatInt(size, 10))
+	_, _ = io.Copy(w, tmp)
 }
